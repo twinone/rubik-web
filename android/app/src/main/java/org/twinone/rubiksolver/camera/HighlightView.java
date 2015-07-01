@@ -1,4 +1,4 @@
-package org.twinone.rubiksolver;/*
+package org.twinone.rubiksolver.camera;/*
  * Copyright (C) 2007 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,6 +26,8 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+
+import org.twinone.rubiksolver.MainActivity;
 
 class HighlightView extends View implements View.OnTouchListener {
 

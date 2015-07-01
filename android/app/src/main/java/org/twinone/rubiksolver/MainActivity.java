@@ -2,8 +2,6 @@ package org.twinone.rubiksolver;
 
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -13,6 +11,6 @@ public class MainActivity extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getFragmentManager().beginTransaction().replace(android.R.id.content, new CameraFragment()).commit();
+        getFragmentManager().beginTransaction().replace(android.R.id.content, new MainFragment()).commit();
     }
 }

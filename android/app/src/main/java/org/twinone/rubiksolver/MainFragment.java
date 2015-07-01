@@ -12,11 +12,14 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import org.twinone.rubiksolver.camera.CapturedFace;
+import org.twinone.rubiksolver.camera.FaceCapturer;
+
 /**
  * Created by twinone on 6/20/15.
  */
 @SuppressWarnings("deprecation")
-public class CameraFragment extends Fragment implements View.OnClickListener, FaceCapturer.Callback {
+public class MainFragment extends Fragment implements View.OnClickListener, FaceCapturer.Callback {
 
     private static final String TAG = "CameraFragment";
     // The absolute difference between two colors such that we consider them to be different colors.
@@ -31,9 +34,12 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Fa
     private Button mButtonCapture;
 
     private RelativeLayout mRootView;
-    private CapturedFace[] mCapturedFaces = new CapturedFace[6];
     private TextView[][] mSquare = new TextView[MainActivity.SIZE][MainActivity.SIZE];
 
+
+    private CapturedFace[] mCapturedFaces = new CapturedFace[6];
+    /** The face that's currently being captured */
+    private int mCurrentFaceIndex = 0;
 
     @Nullable
     @Override
@@ -103,6 +109,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Fa
 
     @Override
     public void onFaceCaptured(int id, CapturedFace f) {
+        mCapturedFaces[id] = f;
         showColors(f);
     }
 
