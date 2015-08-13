@@ -1,5 +1,5 @@
 // Number of cubies per axis of this Rubik's cube
-var CUBE_SIZE = 2;
+var CUBE_SIZE = 3;
 
 var CUBIE_WIDTH = 0.7;
 
@@ -15,16 +15,17 @@ var COLOR_YELLOW = 0xFFD500;
 var COLOR_WHITE = 0xFFFFFF;
 var COLOR_BLACK = 0x000000;
 
-var AXIS_X = 0;
-var AXIS_Y = 1;
-var AXIS_Z = 2;
-
-var FRONT = 1;
-var LEFT = 2;
+var RIGHT = 1;
+var BACK = 2;
 var UP = 3;
-var BACK = -FRONT;
-var RIGHT = -LEFT;
+
+var LEFT = -RIGHT;
+var FRONT = -BACK;
 var DOWN = -UP;
+
+var AXIS_X = RIGHT;
+var AXIS_Y = BACK;
+var AXIS_Z = UP;
 
 var CUBE_COLOR = COLOR_BLACK;
 var ORIGIN = new THREE.Vector3(0, 0, 0);
@@ -135,34 +136,37 @@ function mod(a, b) {
 }
 function intRound(what, to) {
     var res = what + to/2 - (what+to/2) % to;
-    console.log("round(" + what + "," + to + ") = " + (res));
     return res;   
 }
 
 function onKeyPress(e) {
     var key = String.fromCharCode(e.keyCode ? e.keyCode : e.which);
-    var upper = key.toUpperCase() === key;
+    var cw = key.toUpperCase() === key ^ key.shiftKey;
     var face = charToFace(key);
+    
+    var layer = (face == FRONT || face == LEFT || face == DOWN) ? 0 : CUBE_SIZE -1;
+    
     if (face != undefined)
-        enqueueAnimation(new Animation((Math.PI/2),face,1,face));
+        enqueueAnimation(new Animation((Math.PI/2), cw ? face: -face,[layer]));
 }
             
 function charToFace(letter) {
     switch (letter) {
         case 'u': case 'U': return UP;   case 'd': case 'D': return DOWN;
         case 'l': case 'L': return LEFT; case 'r': case 'R': return RIGHT;
-        case 'b': case 'b': return BACK; case 'f': case 'F': return FRONT;
+        case 'b': case 'B': return BACK; case 'f': case 'F': return FRONT;
     }
     return undefined;
 }
 
 
-function Animation(targetAngle, face, numLayers, axis) {
+function Animation(targetAngle, axis, layers) {
     this.targetAngle = targetAngle;
-    this.face = face;
-    this.axis = getAxisVectorFromFace(axis);
-    this.numLayers = numLayers;
     this.angle = 0;
+    this.axisVector = getAxisVectorFromFace(axis);
+
+    this.axis = axis;
+    this.layers = layers;
 }
 
 function enqueueAnimation(anim) {
@@ -173,7 +177,7 @@ function startAnimation(animation) {
     currentAnim = animation;
     active.rotation.set(0, 0, 0);
     active.updateMatrixWorld();
-    addLayerToActiveGroup(currentAnim.face, currentAnim.numLayers);
+    addLayersToActiveGroup(currentAnim.axis, currentAnim.layers);
     animating = true;
 }
 
@@ -184,7 +188,7 @@ function updateAnimation(dt) {
         dr -= currentAnim.angle - currentAnim.targetAngle;
         animating = false;
     }
-    active.rotateOnAxis(currentAnim.axis, dr);
+    active.rotateOnAxis(currentAnim.axisVector, dr);
     if (!animating) onAnimationEnd();
 }
 
@@ -202,30 +206,72 @@ function onAnimationEnd() {
 // Rotate front face clockwise
 
 function updateCubiesRotation() {
-    var f = currentAnim.face;
-    var axis = getFaceAxis(f);
-    var layer = (f == FRONT || f == LEFT || f == DOWN) ? 0 : (CUBE_SIZE - 1);
-    var cw = (layer != 0);
-    rotateLayer(axis, layer, cw);
+    var axis = currentAnim.axis;
+    var userCw = currentAnim.axis > 0;
+    var layer = currentAnim.layers[0];
+    console.log("userCw: " + userCw);
+    rotateLayer(axis, layer, userCw);
 }
 
 function rotateLayer(axis, layer, cw) {
-    // Identify the 4 vertices:
-    var s = CUBE_SIZE -1;
-    var l = layer;
-    var v1, v2, v3, v4;
-    if (axis == AXIS_X) { v1 = [l, 0, 0]; v2 = [l, 0, s]; v3 = [l, s, s]; v4 = [l, s, 0]; }
-    if (axis == AXIS_Y) { v1 = [0, l, 0]; v2 = [s, l, 0]; v3 = [s, l, s]; v4 = [0, l, s]; }
-    if (axis == AXIS_Z) { v1 = [0, 0, l]; v2 = [0, s, l]; v3 = [s, s, l]; v4 = [s, 0, l]; }
-    swap4V(cubies, v1, v2, v3, v4, cw);
-    
-    // edges
-    for (var i = 1; i < CUBE_SIZE -1; i++) {
-        // Offset is i
+    if (Math.abs(axis) == AXIS_X) rotateLayerX(layer, cw);
+    if (Math.abs(axis) == AXIS_Y) rotateLayerY(layer, cw);
+    if (Math.abs(axis) == AXIS_Z) rotateLayerZ(layer, cw);
+}
+
+function rotateLayerX(layer, cw) {
+    var s = CUBE_SIZE;
+    var rings = CUBE_SIZE / 2;
+    for (var i = 0; i < rings; i++) {
+        var ringSize = CUBE_SIZE - i * 2;
+        // offset = i
+        for (var j = 0; j < ringSize-1; j++) {
+            swap4(cubies, layer,i,i+j,  layer,i+j,s-1-i,   layer,s-1-i, s-1-i-j,   layer,s-1-i-j,i,  cw);
+        }
     }
-    
-    // centers
-    
+}
+
+function rotateLayerY(layer, cw) {
+    var s = CUBE_SIZE;
+    var rings = CUBE_SIZE / 2;
+    for (var i = 0; i < rings; i++) {
+        var ringSize = CUBE_SIZE - i * 2;
+        // offset = i
+        for (var j = 0; j < ringSize-1; j++) {
+            swap4(cubies, i+j,layer,i,   s-i-1,layer,i+j,   s-i-1-j,layer,s-i-1,   i,layer,s-i-1-j,  cw);
+        }
+    }
+}
+
+function rotateLayerZ(layer, cw) {
+    var s = CUBE_SIZE;
+    var rings = CUBE_SIZE / 2;
+    for (var i = 0; i < rings; i++) {
+        var ringSize = CUBE_SIZE - i * 2;
+        // offset = i
+        for (var j = 0; j < ringSize-1; j++) {
+            swap4(cubies, i,i+j,layer,  i+j,s-1-i,layer,  s-1-i,s-1-i-j,layer,  s-1-i-j,i,layer,  cw);
+        }
+    }
+}
+
+function sum(v) {
+    var s = 0;
+    for (var i = 0; i < v.length; i++) s += v[i];
+    return s;
+}
+function add(v1, v2) {
+    var ret = [];
+    for (var i = 0; i < v1.length; i++) {
+        ret[i] = v1[i] + v2[i];
+    }
+}
+
+function sub(v1, v2) {
+    var ret = [];
+    for (var i = 0; i < v1.length; i++) {
+        ret[i] = v1[i] - v2[i];
+    }
 }
 
 function swap4V(mat, v1, v2, v3, v4, cw) {
@@ -262,24 +308,32 @@ function addLine(vec, color) {
     scene.add(line);
 }
 
-function addLayerToActiveGroup(face, layers) {
-    if (!layers) { layers = 1; }
-    if (layers <= 0 || layers > CUBE_SIZE) throw "Invalid number of layers";
-    
-    var x, y, z, x2, y2, z2;
-    x = y = z = -1;
-    x2 = y2 = z2 = -1;
-    switch (face) {
-        case LEFT:  x = 0; x2 = layers; break; case RIGHT: x = CUBE_SIZE - layers; x2 = CUBE_SIZE; break;
-        case FRONT: y = 0; y2 = layers; break; case BACK:  y = CUBE_SIZE - layers; y2 = CUBE_SIZE; break;
-        case DOWN:  z = 0; z2 = layers; break; case UP:    z = CUBE_SIZE - layers; z2 = CUBE_SIZE; break;
+function addLayersToActiveGroup(face, layers) {
+    console.log("adding layerS" + face);
+    for (var i = 0; i < layers.length; i++) {
+        addLayerToActiveGroup(face, layers[i]); 
     }
+}
+
+function addLayerToActiveGroup(face, layer) {
+    console.log("ading layer: face="+face, "layer="+layer);
+    if (layer == undefined) { layer = 0; }
+    if (layer < 0 || layer >= CUBE_SIZE) throw "Invalid layer";
+    var x, y, z;;
+    x = y = z = -1;
+    switch (face) {
+        case LEFT:  case RIGHT: x = layer; break;
+        case FRONT: case BACK:  y = layer; break;
+        case DOWN:  case UP:    z = layer; break;
+    }
+    console.log("x:"+x+",y:"+y+",z:"+z);
     for (var i = 0; i < CUBE_SIZE; i++) {
         for (var j = 0; j < CUBE_SIZE; j++) {
             for (var k = 0; k < CUBE_SIZE; k++) {
-                if ((i >= x && i < x2 || x == -1) &&
-                    (j >= y && j < y2 || y == -1) &&
-                    (k >= z && k < z2 || z == -1)) {
+                if ((i == x || x == -1) &&
+                    (j == y || y == -1) &&
+                    (k == z || z == -1)) {
+                    console.log("Attaching cubie" + i + "," + j + "," + k);
                     THREE.SceneUtils.attach(cubies[i][j][k], scene, active);
                 }
             }
