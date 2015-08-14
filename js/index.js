@@ -1,8 +1,8 @@
 // Number of cubies per axis of this Rubik's cube
-var CUBE_SIZE = 4;
+var CUBE_SIZE = 3;
 
 var CUBIE_WIDTH = 100;
-var CUBIE_SPACING = 0.07; // in terms of CUBIE_WIDTH
+var CUBIE_SPACING = 0.07; // in terms of CUBIE_WIDTH // TODO: Add stickers, change this to 0
 var LABEL_MARGIN = 0.5; // in terms of CUBIE_WIDTH * CUBE_SIZE
 
 // Time in ms that it should take to rotate a face 90 degrees
@@ -19,8 +19,11 @@ var COLOR_BLACK = 0x000000;
 
 var COLOR_LABEL = 0x88004D40
 var COLOR_BACKGROUND = COLOR_WHITE;
-var CUBE_COLOR = COLOR_WHITE;
+var CUBE_COLOR = COLOR_BLACK;
 
+
+// Private variables
+var CUBE_WIDTH = CUBIE_WIDTH * (1+CUBIE_SPACING) * CUBE_SIZE - CUBIE_WIDTH * CUBIE_SPACING;
 
 var RIGHT = 1;
 var BACK = 2;
@@ -95,10 +98,10 @@ function init() {
         }
     }
     
-    
     scene.add(active);
+
     
-    showAxis();
+    // showAxis();
     showLabels();
     
     var camPos = CUBIE_WIDTH* (1+CUBIE_SPACING) * CUBE_SIZE/2 * 4;
@@ -209,7 +212,7 @@ function onKeyPress(e) {
     var layer = (face == FRONT || face == LEFT || face == DOWN) ? layerNumber : CUBE_SIZE -1 - layerNumber;
     if (face != undefined) {
         layerNumber = 0;
-        enqueueAnimation(new Animation((Math.PI/2), cw ? face: -face,[layer]));
+        enqueueAnimation(new Animation(cw ? face: -face,[layer]));
     }
 }
             
@@ -223,8 +226,8 @@ function charToFace(letter) {
 }
 
 
-function Animation(targetAngle, axis, layers) {
-    this.targetAngle = targetAngle;
+function Animation(axis, layers) {
+    this.targetAngle = (Math.PI/2);
     this.angle = 0;
     this.axisVector = getAxisVectorFromFace(axis);
     this.axisVector.multiplyScalar(-1);
@@ -344,9 +347,8 @@ function swap4CW(mat, x1,y1,z1, x2,y2,z2, x3,y3,z3, x4,y4,z4) {
 }
 
 function makeText(text, color) {
-    var textShapes = THREE.FontUtils.generateShapes(text);
-    var text = new THREE.ShapeGeometry(textShapes);
-    var textMesh = new THREE.Mesh(text, new THREE.MeshBasicMaterial({ color: color })) ;
+    var geo = new THREE.TextGeometry(text, {size : CUBE_WIDTH / 5});
+    var textMesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: color }));
     scene.add(textMesh);
     return textMesh;
 }
