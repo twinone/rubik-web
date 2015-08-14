@@ -1,5 +1,5 @@
 // Number of cubies per axis of this Rubik's cube
-var CUBE_SIZE = 3;
+var CUBE_SIZE = 4;
 
 var CUBIE_WIDTH = 100;
 var CUBIE_SPACING = 0.07; // in terms of CUBIE_WIDTH // TODO: Add stickers, change this to 0
@@ -55,6 +55,7 @@ var cubies = [];
 
 var active = new THREE.Object3D();
 
+var animDuration = ANIMATION_DURATION;
 var animQueue = [];
 var animating = false;
 var currentAnim;
@@ -122,6 +123,8 @@ function init() {
         if (animating) {
             updateAnimation(dt);
         } else if (animQueue.length != 0) {
+            animDuration = ANIMATION_DURATION * 
+                Math.max(0.3, Math.pow(0.9, animQueue.length/2));
             startAnimation(animQueue.shift());
         }        
         renderer.render(scene, camera);
@@ -249,7 +252,7 @@ function startAnimation(animation) {
 }
 
 function updateAnimation(dt) {
-    var dr = dt * (Math.PI/2) / (ANIMATION_DURATION / 1000.0);
+    var dr = dt * (Math.PI/2) / (animDuration / 1000.0);
     currentAnim.angle += dr;
     if (currentAnim.angle >= currentAnim.targetAngle) {
         dr -= currentAnim.angle - currentAnim.targetAngle;
