@@ -24,6 +24,9 @@ var FACE = {
     BACK : 2, FRONT : -2,
     UP : 3, DOWN: -3
 };
+
+var FACES = [FACE.RIGHT, FACE.BACK, FACE.UP, FACE.LEFT, FACE.FRONT, FACE.DOWN];
+
 var AXIS = {
     X : FACE.RIGHT,
     Y : FACE.BACK,
@@ -70,6 +73,25 @@ var Cube = function () {
     
     this.isInitialized = false;
 };
+
+Cube.prototype.scramble = function scramble() {
+    var turns = (this.size -1) * 10;
+    
+    for (var i = 0; i < turns; i++) {
+        var face = randFace();
+        var layer = randInt(0, this.size-1);
+        var anim = new Animation(face, [layer]);
+        this._enqueueAnimation(anim);
+    }
+}
+
+function randInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function randFace() {
+    return FACES[randInt(0, 5)];
+}
 
 Cube.prototype.setSize = function setSize(size) {
     if (isNaN(size) || !isFinite(size)) throw new Error("Size must be a (finite) number");
@@ -439,7 +461,7 @@ Cube.prototype._addLayersToActiveGroup = function _addLayersToActiveGroup(face, 
 
 Cube.prototype._addLayerToActiveGroup = function addLayerToActiveGroup(face, layer) {
     if (layer == undefined) { layer = 0; }
-    if (layer < 0 || layer >= this.size) throw "Invalid layer";
+    if (layer < 0 || layer >= this.size) throw "Invalid layer: "+ layer;
     var x, y, z;;
     x = y = z = -1;
     switch (face) {
