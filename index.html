@@ -1,13 +1,26 @@
 <html>
     <style>
         body { margin: 0; }
-        canvas { width: 100%; height: 100% }
+        canvas { width: 100%; height: 100%; position: absolute; z-index: 0; }
+        div#container { width: 100%; height: 100%; position: absolute; z-index: 1; }
     </style>
+    
     <body>
+        <canvas id="canvas"></canvas>
+        <div id="container">
+            <input type="button" onclick="smaller();">
+            <input type="button" onclick="bigger();">
+        </div>
+        
+        <!-- Cube -->
         <script src="js/three.min.js"></script>
         <script src="js/helvetiker.js"></script>
         <script src="js/orbitcontrols.js"></script>
         <script src="js/sceneutils.js"></script>
-        <script src="js/index.js"></script>
+        <script src="js/cube.js"></script>
+        <script>
+            var cube = new Cube();
+            cube.init();
+        </script>
     </body>
 </html>
