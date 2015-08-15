@@ -135,11 +135,11 @@ Cube.prototype._setupCubies = function() {
     }   
 }
 
-Cube.prototype.init = function() {
+Cube.prototype.init = function init() {
     this._init();
 }
 
-Cube.prototype._init = function () {
+Cube.prototype._init = function _init() {
     var self = this;
     
     this.scene = new THREE.Scene();
@@ -150,6 +150,11 @@ Cube.prototype._init = function () {
     }
     window.addEventListener('keypress', this.keyPressListener);
     
+    this.resizeListener = function(e) {
+        self._onResize(e);   
+    }
+    window.addEventListener('resize', this.resizeListener);
+    
     this.renderer.setClearColor(COLOR.BACKGROUND);
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(this.renderer.domElement);
@@ -157,10 +162,7 @@ Cube.prototype._init = function () {
     this.scene.add(this.active);
     this._setupCubies();
     
-    // showAxis();
-/*
     this.showLabels();
-*/
     
     var camPos = this.cubieWidth* (1+this.cubieSpacing) * this.size/2 * 4;
     this.camera.position.set(-camPos, -camPos, camPos);
@@ -175,7 +177,8 @@ Cube.prototype._init = function () {
         self.dt = self.clock.getDelta();
         self.animationFrameId = requestAnimationFrame(render);
 
-        updateLabelOrientation();
+        self._updateLabelOrientation();
+        
         if (self.anim.animating) {
             self._updateAnimation(self.dt);
         } else if (self.anim.queue.length != 0) {
@@ -191,6 +194,10 @@ Cube.prototype._init = function () {
     this.isInitialized = true;
 }
 
+Cube.prototype.width = function width() {
+    return (1+this.cubieSpacing) * this.cubieWidth * this.size;
+}
+
 Cube.prototype.destroy = function destroy() {
     cancelAnimationFrame(this.animationFrameId);
     this.renderer.domElement.addEventListener('dblclick', null, false);
@@ -201,27 +208,45 @@ Cube.prototype.destroy = function destroy() {
     empty(this.active);
     this.anim.animating = false;
     window.removeEventListener('keypress', this.keyPressListener);
+    window.removeEventListener('resize', this.resizeListener);
 }
+
+
+Cube.prototype._onResize = function _onResize() {
+    this.camera.aspect = window.innerWidth / window.innerHeight;
+    this.camera.updateProjectionMatrix();
+
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
 
 function empty(elem) {
     while (elem.lastChild) elem.removeChild(elem.lastChild);
 }
 
-Cube.prototype._getFaceMaterial = function _getFaceMaterial(x, y , z) {
-    var def = new THREE.MeshBasicMaterial({color: COLOR.CUBE});
+Cube.prototype._getFaceMaterial = function _getFaceMaterial(x, y, z) {
+    var d = new THREE.MeshBasicMaterial({color: COLOR.CUBE});
+    var s = this.size -1;
     var materials = [
-        ((x == this.size - 1) ? new THREE.MeshBasicMaterial({color: COLOR.GREEN}) : def), // R
-        ((x==0) ? new THREE.MeshBasicMaterial({color: COLOR.BLUE}) : def), // L
-        ((y == this.size - 1) ? new THREE.MeshBasicMaterial({color: COLOR.ORANGE}) : def), // B
-        ((y==0) ? new THREE.MeshBasicMaterial({color: COLOR.RED}) : def), // F
-        ((z == this.size - 1) ? new THREE.MeshBasicMaterial({color: COLOR.YELLOW}) : def), // U
-        ((z==0) ? new THREE.MeshBasicMaterial({color: COLOR.WHITE}) : def) // D
+        // R L B F U D
+        x == s ? getColorMaterial(COLOR.GREEN) : d,
+        x == 0 ? getColorMaterial(COLOR.BLUE) : d,
+        y == s ? getColorMaterial(COLOR.ORANGE) : d,
+        y == 0 ? getColorMaterial(COLOR.RED) : d,
+        z == s ? getColorMaterial(COLOR.YELLOW) : d,
+        z == 0 ? getColorMaterial(COLOR.WHITE) : d
     ];
     return new THREE.MeshFaceMaterial(materials);
 }
 
+function getColorMaterial(color) {
+    return new THREE.MeshBasicMaterial(
+        {color:color, side: THREE.FrontSide}
+    );
+}
 
-function updateLabelOrientation() {
+
+Cube.prototype._updateLabelOrientation = function _updateLabelOrientation() {
     if (this.labels == undefined) return;
     for (var i = 0; i < this.labels.children.length; i++) {
         this.labels.children[i].lookAt(this.camera.position);
@@ -243,24 +268,20 @@ function showAxis() {
 
 
 Cube.prototype.showLabels = function showLabels() {
-    this.labels.add(this._makeLabel(FACE.LEFT));
-    this.labels.add(this._makeLabel(FACE.RIGHT));
-    this.labels.add(this._makeLabel(FACE.UP));
-    this.labels.add(this._makeLabel(FACE.DOWN));
-    this.labels.add(this._makeLabel(FACE.FRONT));
-    this.labels.add(this._makeLabel(FACE.BACK));
-    
-    scene.add(labels);
+    console.log(this.width(), this.labelMargin, this.cubieWidth, this.size);
+    var pos = this.width()/2 + this.labelMargin * this.cubieWidth * this.size;
+    var s = this.width() / 5;
+    for (var i = 0; i < FACES.length; i++) {
+        var face = FACES[i];
+        var shape = THREE.FontUtils.generateShapes(faceToChar(face), {size: s});
+        var geo = new THREE.ShapeGeometry(shape);
+        var m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: COLOR.LABEL }));    
+        m.position.copy(getAxisVectorFromFace(face)).multiplyScalar(pos);
+        
+        this.labels.add(m);
+    }
+    this.scene.add(this.labels);
 }
-
-Cube.prototype._makeLabel = function _makeLabel(face) {
-    var s = this.width()/2 + this.labelMargin*this.cubieWidth*this.size;
-    var lab = this.makeText(faceToChar(face), COLOR.LABEL);
-    this.scene.add(lab);
-    lab.position.copy(getAxisVectorFromFace(face)).multiplyScalar(s);
-    return lab;
-}
-
 
 Cube.prototype._alignCubies = function _alignCubies() {
     for (var i = 0; i < this.size; i++) {
@@ -430,18 +451,8 @@ function swap4CW(mat, x1,y1,z1, x2,y2,z2, x3,y3,z3, x4,y4,z4) {
     mat[x3][y3][z3] = mat[x2][y2][z2];
     mat[x2][y2][z2] = mat[x1][y1][z1];
     mat[x1][y1][z1] = tmp;
-/*
-    console.log("("+x1+","+y1+","+z1+") -> ("+x2+","+y2+","+z2+") ->"+
-               " ("+x3+","+y3+","+z3+") -> ("+x4+","+y4+","+z4+")");
-*/
 }
 
-Cube.prototype.makeText = function makeText(text, color) {
-    var geo = new THREE.TextGeometry(text, {size : this.width() / 5});
-    var textMesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: color }));
-    this.scene.add(textMesh);
-    return textMesh;
-}
 function makeLine(vec, color) {
     var mat = new THREE.LineBasicMaterial({color:color, linewidth:3});
     var geo = new THREE.Geometry();
