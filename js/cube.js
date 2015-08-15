@@ -162,7 +162,9 @@ Cube.prototype._init = function _init() {
     this.scene.add(this.active);
     this._setupCubies();
     
+/*
     this.showLabels();
+*/
     
     var camPos = this.cubieWidth* (1+this.cubieSpacing) * this.size/2 * 4;
     this.camera.position.set(-camPos, -camPos, camPos);
@@ -282,6 +284,13 @@ Cube.prototype.showLabels = function showLabels() {
     }
     this.scene.add(this.labels);
 }
+
+Cube.prototype.hideLabels = function hideLabels() {
+    if (!this.labels) return;
+    this.scene.remove(this.labels);
+    this.labels = new THREE.Object3D();
+}
+
 
 Cube.prototype._alignCubies = function _alignCubies() {
     for (var i = 0; i < this.size; i++) {
