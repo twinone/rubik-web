@@ -46,13 +46,13 @@ var ROTATION_MATRIX = [
 
 var Cube = function () {
     this.dt = 0,
-    this.scene = undefined;
-    this.camera = undefined;
+    this.scene = null;
+    this.camera = null;
     this.clock = new THREE.Clock();
     this.canvas = document.getElementById("canvas");
     this.renderer = new THREE.WebGLRenderer({ canvas: canvas });
 
-    this.animationFrameId = undefined;
+    this.animationFrameId = null;
     
     this.size = DEFAULTS.SIZE;
     this.cubieWidth = DEFAULTS.CUBIE_WIDTH;
@@ -60,9 +60,10 @@ var Cube = function () {
     this.labelMargin = DEFAULTS.LABEL_MARGIN;
     
     this.cubies = [];
-    this.active = new THREE.Object3D();
-    this.labels = new THREE.Object3D();
+    this.active = null; // init
+    this.labels = null;
     this.axis = new THREE.Object3D();
+    this.shouldShowLabels = false;
     
     this.anim = {
         duration : DEFAULTS.ANIMATION_DURATION,
@@ -100,7 +101,6 @@ Cube.prototype.setSize = function setSize(size) {
         console.warn("Size " + size + " is not valid, converting to 1");
     }
     this.size = size;
-    console.log("set size: " + size + ", " + this.size);
     if (this.isInitialized) {
         this.destroy();
         this.init();
@@ -159,12 +159,13 @@ Cube.prototype._init = function _init() {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(this.renderer.domElement);
     
+    this.active = new THREE.Object3D()
     this.scene.add(this.active);
     this._setupCubies();
     
-/*
-    this.showLabels();
-*/
+    if (this.shouldShowLabels) {
+        this.showLabels();
+    }
     
     var camPos = this.cubieWidth* (1+this.cubieSpacing) * this.size/2 * 4;
     this.camera.position.set(-camPos, -camPos, camPos);
@@ -206,8 +207,11 @@ Cube.prototype.destroy = function destroy() {
     this.scene = null;
     this.camera = null;
     this.controls = null;
-    empty(this.cubies);
+    this.labels = null;
     empty(this.active);
+    this.active = null;
+    this.anim.queue = [];
+    empty(this.cubies);
     this.anim.animating = false;
     window.removeEventListener('keypress', this.keyPressListener);
     window.removeEventListener('resize', this.resizeListener);
@@ -249,7 +253,7 @@ function getColorMaterial(color) {
 
 
 Cube.prototype._updateLabelOrientation = function _updateLabelOrientation() {
-    if (this.labels == undefined) return;
+    if (!this.labels) return;
     for (var i = 0; i < this.labels.children.length; i++) {
         this.labels.children[i].lookAt(this.camera.position);
         this.labels.children[i].up = this.camera.up;
@@ -269,8 +273,14 @@ function showAxis() {
 }
 
 
+Cube.prototype.toggleLabels = function toggleLabels() {
+    if (this.labels) this.hideLabels();
+    else this.showLabels();
+}
+
 Cube.prototype.showLabels = function showLabels() {
-    console.log(this.width(), this.labelMargin, this.cubieWidth, this.size);
+    this.hideLabels(); // cleanup if they're there already
+    this.labels = new THREE.Object3D();
     var pos = this.width()/2 + this.labelMargin * this.cubieWidth * this.size;
     var s = this.width() / 5;
     for (var i = 0; i < FACES.length; i++) {
@@ -283,12 +293,14 @@ Cube.prototype.showLabels = function showLabels() {
         this.labels.add(m);
     }
     this.scene.add(this.labels);
+    this.shouldShowLabels = true;
 }
 
 Cube.prototype.hideLabels = function hideLabels() {
     if (!this.labels) return;
     this.scene.remove(this.labels);
-    this.labels = new THREE.Object3D();
+    this.labels = null;
+    this.shouldShowLabels = false;
 }
 
 
@@ -332,7 +344,7 @@ Cube.prototype._onKeyPress = function onKeyPress(e) {
     var face = charToFace(key);
     
     var layer = (face == FACE.FRONT || face == FACE.LEFT || face == FACE.DOWN) ? layerNumber : this.size -1 - layerNumber;
-    if (face != undefined) {
+    if (face) {
         layerNumber = 0;
         this._enqueueAnimation(new Animation(cw ? face: -face,[layer]));
     }
@@ -480,7 +492,7 @@ Cube.prototype._addLayersToActiveGroup = function _addLayersToActiveGroup(face, 
 }
 
 Cube.prototype._addLayerToActiveGroup = function addLayerToActiveGroup(face, layer) {
-    if (layer == undefined) { layer = 0; }
+    if (layer == null) { layer = 0; }
     if (layer < 0 || layer >= this.size) throw "Invalid layer: "+ layer;
     var x, y, z;;
     x = y = z = -1;
