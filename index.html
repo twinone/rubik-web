@@ -20,7 +20,9 @@
             <span id="size"></span>
             <input type="button" onclick="increment(1);" value="+">
             <br/><br/>
-            <input type="button" onclick="scramble();" value="Scramble">
+            <input type="button" onclick="cube.scramble();" value="Scramble">
+            <br/><br/>
+            <input type="button" onclick="cube.toggleLabels();" value="Labels">
         </div>
         
         <!-- Cube -->
@@ -46,8 +48,6 @@
                 cube.setSize(cube.size + i);
                 updateUI();
             }
-            
-            function scramble() { cube.scramble(); }
             
             
             var size = getParameterByName("size");
