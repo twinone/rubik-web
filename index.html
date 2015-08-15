@@ -8,8 +8,10 @@
     <body>
         <canvas id="canvas"></canvas>
         <div id="container">
-            <input type="button" onclick="smaller();">
-            <input type="button" onclick="bigger();">
+            <span>Cube size: </span>
+            <input type="button" onclick="increment(-1);" value="-">
+            <span id="size"></span>
+            <input type="button" onclick="increment(1);" value="+">
         </div>
         
         <!-- Cube -->
@@ -19,8 +21,37 @@
         <script src="js/sceneutils.js"></script>
         <script src="js/cube.js"></script>
         <script>
+            function getParameterByName(name) {
+                name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+                var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+                results = regex.exec(location.search);
+                return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+            }
+            
+            function updateUI() {
+                document.getElementById('size').textContent = cube.size;
+            }
+            
+            function increment(i) {
+                var size = cube.size + 1;
+                cube.setSize(cube.size + i);
+                updateUI();
+            }
+            
+            
+            var size = getParameterByName("size");
+            if (!size) size = 3;
+            
+            var size = Number(size);
+            console.log((size instanceof Number)); // false
+            console.log("cube size: " + size);
+            
             var cube = new Cube();
+            cube.setSize(size);
             cube.init();
+            updateUI();
+            
+            
         </script>
     </body>
 </html>

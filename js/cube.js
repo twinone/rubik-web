@@ -43,8 +43,8 @@ var ROTATION_MATRIX = [
 
 var Cube = function () {
     this.dt = 0,
-    this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000);
+    this.scene = undefined;
+    this.camera = undefined;
     this.clock = new THREE.Clock();
     this.canvas = document.getElementById("canvas");
     this.renderer = new THREE.WebGLRenderer({ canvas: canvas });
@@ -68,14 +68,21 @@ var Cube = function () {
         queue : []
     };
     
-    this.scene.add(this.active);
+    this.isInitialized = false;
 };
 
 Cube.prototype.setSize = function setSize(size) {
+    if (isNaN(size) || !isFinite(size)) throw new Error("Size must be a (finite) number");
+    if (size < 1) {
+        size = 1;
+        console.warn("Size " + size + " is not valid, converting to 1");
+    }
     this.size = size;
-    if (id != undefined) cancelAnimationFrame(id);
-    this.renderer.domElement.addEventListener('dblclick', null, false);
-   
+    console.log("set size: " + size + ", " + this.size);
+    if (this.isInitialized) {
+        this.destroy();
+        this.init();
+    }
 }
 Cube.prototype.width = function() {
     return this.cubieWidth * (1 + this.cubieSpacing)
@@ -112,14 +119,20 @@ Cube.prototype.init = function() {
 
 Cube.prototype._init = function () {
     var self = this;
-    window.addEventListener('keypress', function(e) {
+    
+    this.scene = new THREE.Scene();
+    this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000);
+
+    this.keyPressListener = function(e) {
         self._onKeyPress(e);
-    });
+    }
+    window.addEventListener('keypress', this.keyPressListener);
     
     this.renderer.setClearColor(COLOR.BACKGROUND);
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(this.renderer.domElement);
     
+    this.scene.add(this.active);
     this._setupCubies();
     
     // showAxis();
@@ -138,7 +151,7 @@ Cube.prototype._init = function () {
     
     function render () {
         self.dt = self.clock.getDelta();
-        self.id = requestAnimationFrame(render);
+        self.animationFrameId = requestAnimationFrame(render);
 
         updateLabelOrientation();
         if (self.anim.animating) {
@@ -152,9 +165,25 @@ Cube.prototype._init = function () {
     }
     
     render();
+    
+    this.isInitialized = true;
 }
 
+Cube.prototype.destroy = function destroy() {
+    cancelAnimationFrame(this.animationFrameId);
+    this.renderer.domElement.addEventListener('dblclick', null, false);
+    this.scene = null;
+    this.camera = null;
+    this.controls = null;
+    empty(this.cubies);
+    empty(this.active);
+    this.anim.animating = false;
+    window.removeEventListener('keypress', this.keyPressListener);
+}
 
+function empty(elem) {
+    while (elem.lastChild) elem.removeChild(elem.lastChild);
+}
 
 Cube.prototype._getFaceMaterial = function _getFaceMaterial(x, y , z) {
     var def = new THREE.MeshBasicMaterial({color: COLOR.CUBE});
