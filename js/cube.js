@@ -1,3 +1,4 @@
+var PI = Math.PI;
 var DEFAULTS = {
     SIZE : 3,
     CUBIE_WIDTH : 100,
@@ -68,8 +69,9 @@ var Cube = function () {
     this.anim = {
         duration : DEFAULTS.ANIMATION_DURATION,
         animating : false,
-        current : undefined,
-        queue : []
+        current : null,
+        queue : [],
+        start : null
     };
     
     this.isInitialized = false;
@@ -183,7 +185,7 @@ Cube.prototype._init = function _init() {
         self._updateLabelOrientation();
         
         if (self.anim.animating) {
-            self._updateAnimation(self.dt);
+            self._updateAnimation();
         } else if (self.anim.queue.length != 0) {
             self.anim.duration = DEFAULTS.ANIMATION_DURATION * 
                 Math.max(0.3, Math.pow(0.9, self.anim.queue.length/2));
@@ -319,9 +321,9 @@ Cube.prototype._alignCubies = function _alignCubies() {
 }
 
 function roundRotation(cubie) {
-    cubie.rotation.x = intRound(mod(cubie.rotation.x, Math.PI*2), Math.PI/2);
-    cubie.rotation.y = intRound(mod(cubie.rotation.y, Math.PI*2), Math.PI/2);
-    cubie.rotation.z = intRound(mod(cubie.rotation.z, Math.PI*2), Math.PI/2);
+    cubie.rotation.x = intRound(mod(cubie.rotation.x, PI*2), PI/2);
+    cubie.rotation.y = intRound(mod(cubie.rotation.y, PI*2), PI/2);
+    cubie.rotation.z = intRound(mod(cubie.rotation.z, PI*2), PI/2);
 }
 function mod(a, b) {
     var m = a % b;
@@ -344,7 +346,7 @@ Cube.prototype._onKeyPress = function onKeyPress(e) {
     var face = charToFace(key);
     
     var layer = (face == FACE.FRONT || face == FACE.LEFT || face == FACE.DOWN) ? layerNumber : this.size -1 - layerNumber;
-    if (face) {
+    if (face !== null) {
         layerNumber = 0;
         this._enqueueAnimation(new Animation(cw ? face: -face,[layer]));
     }
@@ -356,12 +358,12 @@ function charToFace(letter) {
         case 'L': return FACE.LEFT;      case 'R': return FACE.RIGHT;
         case 'B': return FACE.BACK;      case 'F': return FACE.FRONT;
     }
-    return undefined;
+    return null;
 }
 
 
 function Animation(axis, layers) {
-    this.targetAngle = (Math.PI/2);
+    this.targetAngle = (PI/2);
     this.angle = 0;
     this.axisVector = getAxisVectorFromFace(axis);
     this.axisVector.multiplyScalar(-1);
@@ -379,16 +381,26 @@ Cube.prototype._startAnimation = function _startAnimation(animation) {
     this.active.rotation.set(0, 0, 0);
     this.active.updateMatrixWorld();
     this._addLayersToActiveGroup(this.anim.current.axis, this.anim.current.layers);
+    this.anim.start = this.clock.getElapsedTime();
     this.anim.animating = true;
 }
 
-Cube.prototype._updateAnimation = function _updateAnimation(dt) {
-    var dr = dt * (Math.PI/2) / (this.anim.duration / 1000.0);
-    this.anim.current.angle += dr;
-    if (this.anim.current.angle >= this.anim.current.targetAngle) {
+Cube.prototype._updateAnimation = function _updateAnimation() {
+    
+    var dt = (this.clock.getElapsedTime() - this.anim.start);
+    var dur = this.anim.duration / 1000;
+    var pct = dt / dur;
+    
+    var angle = (PI/2) * pct;
+    if (angle > PI/2) {
+        angle = PI/2;
         this.anim.animating = false;
     }
-    this.active.rotateOnAxis(this.anim.current.axisVector, dr);
+    console.log(angle + " of " + PI/2);
+    this.active.rotation.x = angle * this.anim.current.axisVector.x;
+    this.active.rotation.y = angle * this.anim.current.axisVector.y;
+    this.active.rotation.z = angle * this.anim.current.axisVector.z;
+    
     if (!this.anim.animating) this._onAnimationEnd();
 }
 
