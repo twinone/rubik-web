@@ -80,11 +80,15 @@ var Cube = function () {
     this.isInitialized = false;
 };
 
-Cube.prototype.resetCamera = function resetCamera() {
+
+Cube.prototype._setupCamera = function _setupCamera() {
     var camPos = this.cubieWidth* (1+this.cubieSpacing) * this.size/2 * 4;
     this.camera.position.set(-camPos, -camPos, camPos);
     this.camera.up.set(0,0,1);
     this.camera.lookAt(ORIGIN);
+}
+Cube.prototype.resetCamera = function resetCamera() {
+    this._setupCamera();
 
     this.controls.center.set(0,0,0);
 }
@@ -217,13 +221,8 @@ Cube.prototype._init = function _init() {
         this.showLabels();
     }
     
-    var camPos = this.cubieWidth* (1+this.cubieSpacing) * this.size/2 * 4;
-    this.camera.position.set(-camPos, -camPos, camPos);
-    this.camera.up.set(0,0,1);
-    this.camera.lookAt(ORIGIN);
-    
+    this._setupCamera();
     this.controls = new THREE.OrbitControls(this.camera);
-    this.resetCamera();
     
     function render () {
         self.dt = self.clock.getDelta();

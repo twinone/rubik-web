@@ -524,27 +524,27 @@ THREE.OrbitControls = function ( object, domElement ) {
 
 	function onKeyDown( event ) {
 
-		if ( scope.enabled === false || scope.noKeys === true || scope.noPan === true ) return;
-
+		if ( scope.enabled === false || scope.noKeys === true || scope.noRotate === true ) return;
+        var angle = Math.PI/4;
 		switch ( event.keyCode ) {
 
 			case scope.keys.UP:
-				scope.pan( 0, scope.keyPanSpeed );
+				scope.rotateUp( angle );
 				scope.update();
 				break;
 
 			case scope.keys.BOTTOM:
-				scope.pan( 0, - scope.keyPanSpeed );
+				scope.rotateUp( - angle );
 				scope.update();
 				break;
 
 			case scope.keys.LEFT:
-				scope.pan( scope.keyPanSpeed, 0 );
+				scope.rotateLeft( angle );
 				scope.update();
 				break;
 
 			case scope.keys.RIGHT:
-				scope.pan( - scope.keyPanSpeed, 0 );
+				scope.rotateLeft( - angle );
 				scope.update();
 				break;
 
