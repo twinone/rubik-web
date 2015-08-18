@@ -4,7 +4,7 @@ var DEFAULTS = {
     CUBIE_WIDTH : 100,
     CUBIE_SPACING : 0.07, // in terms of CUBIE_WIDTH // TODO: Add stickers, change this to 0
     LABEL_MARGIN : 0.5, // in terms of CUBIE_WIDTH * CUBE_SIZE
-    ANIMATION_DURATION : 200 // ms
+    ANIMATION_DURATION : 3000 // ms
 };
 
 var COLOR = {
@@ -79,12 +79,26 @@ var Cube = function () {
 
 Cube.prototype.scramble = function scramble() {
     var turns = (this.size -1) * 10;
-    
+    turns = 3;
     for (var i = 0; i < turns; i++) {
         var face = randFace();
         var layer = randInt(0, this.size-1);
         var anim = new Animation(face, [layer]);
         this._enqueueAnimation(anim);
+    }
+}
+
+Cube.prototype._optimizeQueue = function _optimizeQueue() {
+    var found = true; // enter the loop
+    while (found) {
+        found = false;
+        for (var i = this.anim.queue.length -2; i >= 0; i--) {
+            if (this.anim.queue[i].axis + this.anim.queue[i+1].axis == 0) {
+                found = true;
+                this.anim.queue.splice(i, 2);
+                i--;
+            }
+        }
     }
 }
 
@@ -180,7 +194,6 @@ Cube.prototype._init = function _init() {
     
     function render () {
         self.dt = self.clock.getDelta();
-        self.animationFrameId = requestAnimationFrame(render);
 
         self._updateLabelOrientation();
         
@@ -192,6 +205,9 @@ Cube.prototype._init = function _init() {
             self._startAnimation(self.anim.queue.shift());
         }
         self.renderer.render(self.scene, self.camera);
+        
+                self.animationFrameId = requestAnimationFrame(render);
+
     }
     
     render();
@@ -372,8 +388,10 @@ function Animation(axis, layers) {
     this.layers = layers;
 }
 
-Cube.prototype._enqueueAnimation = function _enqueueAnimation(anim) {
+Cube.prototype._enqueueAnimation = function _enqueueAnimation(anim, optimize) {
     this.anim.queue.push(anim);
+    
+    this._optimizeQueue();
 }
 
 Cube.prototype._startAnimation = function _startAnimation(animation) {
@@ -396,7 +414,6 @@ Cube.prototype._updateAnimation = function _updateAnimation() {
         angle = PI/2;
         this.anim.animating = false;
     }
-    console.log(angle + " of " + PI/2);
     this.active.rotation.x = angle * this.anim.current.axisVector.x;
     this.active.rotation.y = angle * this.anim.current.axisVector.y;
     this.active.rotation.z = angle * this.anim.current.axisVector.z;
@@ -405,7 +422,6 @@ Cube.prototype._updateAnimation = function _updateAnimation() {
 }
 
 Cube.prototype._onAnimationEnd = function _onAnimationEnd() {
-    console.log("anim end");
     // Re-add items to the scene
     while (this.active.children.length > 0) {
         var child = this.active.children[0];
@@ -497,9 +513,10 @@ function makeLine(vec, color) {
     return line;
 }
 
+
 Cube.prototype._addLayersToActiveGroup = function _addLayersToActiveGroup(face, layers) {
     for (var i = 0; i < layers.length; i++) {
-        this._addLayerToActiveGroup(face, layers[i]); 
+            this._addLayerToActiveGroup(face, layers[i]); 
     }
 }
 
