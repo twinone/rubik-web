@@ -1,10 +1,11 @@
 var PI = Math.PI;
+
 var DEFAULTS = {
     SIZE : 3,
     CUBIE_WIDTH : 100,
     CUBIE_SPACING : 0.07, // in terms of CUBIE_WIDTH // TODO: Add stickers, change this to 0
     LABEL_MARGIN : 0.5, // in terms of CUBIE_WIDTH * CUBE_SIZE
-    ANIMATION_DURATION : 3000 // ms
+    ANIMATION_DURATION : 200 // ms
 };
 
 var COLOR = {
@@ -64,7 +65,9 @@ var Cube = function () {
     this.active = null; // init
     this.labels = null;
     this.axis = new THREE.Object3D();
+    
     this.shouldShowLabels = false;
+    this.shouldOptimizeQueue = true;
     
     this.anim = {
         duration : DEFAULTS.ANIMATION_DURATION,
@@ -79,7 +82,6 @@ var Cube = function () {
 
 Cube.prototype.scramble = function scramble() {
     var turns = (this.size -1) * 10;
-    turns = 3;
     for (var i = 0; i < turns; i++) {
         var face = randFace();
         var layer = randInt(0, this.size-1);
@@ -89,17 +91,40 @@ Cube.prototype.scramble = function scramble() {
 }
 
 Cube.prototype._optimizeQueue = function _optimizeQueue() {
+    var q = this.anim.queue;
+    // Remove all consecutive oposite moves
     var found = true; // enter the loop
     while (found) {
         found = false;
-        for (var i = this.anim.queue.length -2; i >= 0; i--) {
-            if (this.anim.queue[i].axis + this.anim.queue[i+1].axis == 0) {
+        for (var i = q.length -2; i >= 0; i--) {
+            if (q[i].cancels(q[i+1])) {
                 found = true;
-                this.anim.queue.splice(i, 2);
+                q.splice(i, 2);
                 i--;
             }
         }
     }
+    
+    // Remove all 4 consecutive turns
+    found = true; // enter the loop
+    while (found) {
+        found = false;
+        for (var i = q.length -4; i >= 0; i--) {
+            if (q[i].equals(q[i+1]) &&
+                q[i].equals(q[i+2]) &&
+                q[i].equals(q[i+3])) {
+                found = true;
+                q.splice(i, 4);
+                i -= 3;
+            }
+        }
+    }
+    
+    this.anim.queue = q;
+}
+
+function isPermutation() {
+    
 }
 
 function randInt(min, max) {
@@ -190,8 +215,6 @@ Cube.prototype._init = function _init() {
     
     new THREE.OrbitControls(this.camera);
         
-   
-    
     function render () {
         self.dt = self.clock.getDelta();
 
@@ -378,7 +401,7 @@ function charToFace(letter) {
 }
 
 
-function Animation(axis, layers) {
+var Animation = function Animation(axis, layers) {
     this.targetAngle = (PI/2);
     this.angle = 0;
     this.axisVector = getAxisVectorFromFace(axis);
@@ -388,10 +411,24 @@ function Animation(axis, layers) {
     this.layers = layers;
 }
 
-Cube.prototype._enqueueAnimation = function _enqueueAnimation(anim, optimize) {
+// Returns true if this animation is the opposite of anim,
+// That is, if this and anim were queued one after the other
+// the state after the animation would be the same as the current state
+Animation.prototype.cancels = function cancels(anim) {
+    return this.axis + anim.axis == 0
+        && this.layers.sort().equals(anim.layers.sort());
+}
+
+Animation.prototype.equals = function equals(anim) {
+    return this.axis == anim.axis
+        && this.layers.sort().equals(anim.layers.sort());
+}
+
+Cube.prototype._enqueueAnimation = function _enqueueAnimation(anim) {
     this.anim.queue.push(anim);
-    
-    this._optimizeQueue();
+    if (this.shouldOptimizeQueue) {
+        this._optimizeQueue();
+    }
 }
 
 Cube.prototype._startAnimation = function _startAnimation(animation) {
@@ -597,5 +634,30 @@ function updateCubieStickerRotation(cubie, axis, cw) {
     var idx = axisToIndex(axis);
     
 }
+
+// attach the .equals method to Array's prototype to call it on any array
+Array.prototype.equals = function (array) {
+    // if the other array is a falsy value, return
+    if (!array)
+        return false;
+
+    // compare lengths - can save a lot of time 
+    if (this.length != array.length)
+        return false;
+
+    for (var i = 0, l=this.length; i < l; i++) {
+        // Check if we have nested arrays
+        if (this[i] instanceof Array && array[i] instanceof Array) {
+            // recurse into the nested arrays
+            if (!this[i].equals(array[i]))
+                return false;       
+        }           
+        else if (this[i] != array[i]) { 
+            // Warning - two different object instances will never be equal: {x:20} != {x:20}
+            return false;   
+        }           
+    }       
+    return true;
+}   
 
 
