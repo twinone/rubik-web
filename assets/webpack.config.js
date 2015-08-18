@@ -1,3 +1,5 @@
+var webpack = require("webpack");
+
 module.exports = {
     entry: "./main",
     output: {
@@ -7,6 +9,9 @@ module.exports = {
     module: {
         loaders: [
             { test: /\.css$/, loader: "style!css" }
+        ],
+        plugins: [
+            new webpack.optimize.UglifyJsPlugin()
         ]
     }
 };
