@@ -1,52 +1,52 @@
 var PI = Math.PI;
 
-var DEFAULTS = {
-    SIZE : 3,
-    CUBIE_WIDTH : 100,
-    CUBIE_SPACING : 0.07, // in terms of CUBIE_WIDTH // TODO: Add stickers, change this to 0
-    LABEL_MARGIN : 0.5, // in terms of CUBIE_WIDTH * CUBE_SIZE
-    ANIMATION_DURATION : 700 // ms
+var defaults = {
+    size: 3,
+    cubie_width: 100,
+    cubie_spacing: 0.07, // in terms of CUBIE_WIDTH // TODO: Add stickers, change this to 0
+    label_margin: 0.5, // in terms of CUBIE_WIDTH * CUBE_SIZE
+    animation_duration: 700, // ms
 };
 
-var COLOR = {
-    RED : 0xC41E3A,
-    GREEN : 0x009E60,
-    BLUE : 0x0051BA,
-    ORANGE : 0xFF5800,
-    YELLOW : 0xFFD500,
-    WHITE : 0xFFFFFF,
-    BLACK : 0x000000,
-    LABEL : 0x88004D40,
-    BACKGROUND : 0xFFFFFF,
-    CUBE : 0x0
+var Color = {
+    RED: 0xC41E3A,
+    GREEN: 0x009E60,
+    BLUE: 0x0051BA,
+    ORANGE: 0xFF5800,
+    YELLOW: 0xFFD500,
+    WHITE: 0xFFFFFF,
+    BLACK: 0x000000,
+    LABEL: 0x88004D40,
+    BACKGROUND: 0xFFFFFF,
+    CUBE: 0x0,
 };
 
-var FACE = {
+var Face = {
     RIGHT : 1, LEFT : -1,
     BACK : 2, FRONT : -2,
-    UP : 3, DOWN: -3
+    UP : 3, DOWN : -3,
 };
 
-var FACES = [FACE.RIGHT, FACE.BACK, FACE.UP, FACE.LEFT, FACE.FRONT, FACE.DOWN];
+var faces = [FACE.RIGHT, FACE.BACK, FACE.UP, FACE.LEFT, FACE.FRONT, FACE.DOWN];
 
-var AXIS = {
-    X : FACE.RIGHT,
-    Y : FACE.BACK,
-    Z : FACE.UP,
+var Axis = {
+    X: FACE.RIGHT,
+    Y: FACE.BACK,
+    Z: FACE.UP,
     CUBE_X : FACE.RIGHT,
     CUBE_Y : FACE.UP,
-    CUBE_Z : FACE.FRONT
+    CUBE_Z : FACE.FRONT,
 };
 
 var ORIGIN = new THREE.Vector3(0, 0, 0);
 
-var ROTATION_MATRIX = [
+var rotationMatrix = [
     [FACE.UP,   FACE.BACK,   FACE.DOWN,   FACE.FRONT], // X
     [FACE.UP,    FACE.RIGHT,  FACE.DOWN,   FACE.LEFT], // Y
-    [FACE.FRONT, FACE.RIGHT,  FACE.BACK,   FACE.LEFT] // Z
+    [FACE.FRONT, FACE.RIGHT,  FACE.BACK,   FACE.LEFT], // Z
 ];
 
-var Cube = function () {
+var Cube = function Cube() {
     this.dt = 0,
     this.scene = null;
     this.camera = null;
@@ -70,12 +70,12 @@ var Cube = function () {
     this.shouldOptimizeQueue = true;
     
     this.anim = {
-        duration : DEFAULTS.ANIMATION_DURATION,
-        animating : false,
-        current : null,
-        queue : [],
-        start : null,
-        interpolator : null
+        duration: DEFAULTS.ANIMATION_DURATION,
+        animating: false,
+        current: null,
+        queue: [],
+        start: null,
+        interpolator: null
     };
     
     this.isInitialized = false;
