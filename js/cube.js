@@ -80,6 +80,15 @@ var Cube = function () {
     this.isInitialized = false;
 };
 
+Cube.prototype.resetCamera = function resetCamera() {
+    var camPos = this.cubieWidth* (1+this.cubieSpacing) * this.size/2 * 4;
+    this.camera.position.set(-camPos, -camPos, camPos);
+    this.camera.up.set(0,0,1);
+    this.camera.lookAt(ORIGIN);
+
+    this.controls.center.set(0,0,0);
+}
+
 Cube.prototype.scramble = function scramble() {
     var turns = (this.size -1) * 10;
     for (var i = 0; i < turns; i++) {
@@ -213,8 +222,9 @@ Cube.prototype._init = function _init() {
     this.camera.up.set(0,0,1);
     this.camera.lookAt(ORIGIN);
     
-    new THREE.OrbitControls(this.camera);
-        
+    this.controls = new THREE.OrbitControls(this.camera);
+    this.resetCamera();
+    
     function render () {
         self.dt = self.clock.getDelta();
 

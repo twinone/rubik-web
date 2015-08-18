@@ -11,6 +11,9 @@
         div#pad {
             padding: 2em;
         }
+        input {
+            margin-top: 5px;
+        }
     
     </style>
     
@@ -23,10 +26,12 @@
                 <input type="button" onclick="increment(-1);" value="-">
                 <span id="size"></span>
                 <input type="button" onclick="increment(1);" value="+">
-                <br/><br/>
+                <br/>
                 <input type="button" onclick="cube.scramble();" value="Scramble">
-                <br/><br/>
+                <br/>
                 <input type="button" onclick="cube.toggleLabels();" value="Labels">
+                <br/>
+                <input type="button" onclick="cube.resetCamera();" value="Reset Camera">
             </div>
         </div>
         
