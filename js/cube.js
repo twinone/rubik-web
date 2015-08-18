@@ -5,7 +5,7 @@ var DEFAULTS = {
     CUBIE_WIDTH : 100,
     CUBIE_SPACING : 0.07, // in terms of CUBIE_WIDTH // TODO: Add stickers, change this to 0
     LABEL_MARGIN : 0.5, // in terms of CUBIE_WIDTH * CUBE_SIZE
-    ANIMATION_DURATION : 200 // ms
+    ANIMATION_DURATION : 700 // ms
 };
 
 var COLOR = {
@@ -74,12 +74,28 @@ var Cube = function () {
         animating : false,
         current : null,
         queue : [],
-        start : null
+        start : null,
+        interpolator : null
     };
     
     this.isInitialized = false;
 };
 
+Cube.prototype.setInterpolator = function setInterpolator(interpolator) {
+    if (INTERPOLATOR.isInstance(interpolator)) {
+        this.anim.interpolator = interpolator;
+    }
+    else if (typeof(interpolator) == "string") {
+        instance = new INTERPOLATOR[interpolator]();
+        if (INTERPOLATOR.isInstance(instance)) {
+            this.anim.interpolator = instance;
+        } else {
+            throw new Error("Invalid interpolator name: " + interpolator);
+        }
+    } else {
+        console.warn("setInterpolator() expects an interpolator or a string");
+    }
+}
 
 Cube.prototype._setupCamera = function _setupCamera() {
     var camPos = this.cubieWidth* (1+this.cubieSpacing) * this.size/2 * 4;
@@ -222,7 +238,7 @@ Cube.prototype._init = function _init() {
     }
     
     this._setupCamera();
-    this.controls = new THREE.OrbitControls(this.camera);
+    this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
     
     function render () {
         self.dt = self.clock.getDelta();
@@ -242,8 +258,9 @@ Cube.prototype._init = function _init() {
 
     }
     
-    render();
+    this.anim.interpolator = new INTERPOLATOR.Linear();
     
+    render();
     this.isInitialized = true;
 }
 
@@ -454,12 +471,14 @@ Cube.prototype._updateAnimation = function _updateAnimation() {
     var dt = (this.clock.getElapsedTime() - this.anim.start);
     var dur = this.anim.duration / 1000;
     var pct = dt / dur;
-    
-    var angle = (PI/2) * pct;
-    if (angle > PI/2) {
-        angle = PI/2;
+    if (pct > 1.0) {
+        pct = 1.0;
         this.anim.animating = false;
     }
+    pct = this.anim.interpolator.getInterpolation(pct);
+    
+    var angle = (PI/2) * pct;
+
     this.active.rotation.x = angle * this.anim.current.axisVector.x;
     this.active.rotation.y = angle * this.anim.current.axisVector.y;
     this.active.rotation.z = angle * this.anim.current.axisVector.z;
@@ -562,7 +581,7 @@ function makeLine(vec, color) {
 
 Cube.prototype._addLayersToActiveGroup = function _addLayersToActiveGroup(face, layers) {
     for (var i = 0; i < layers.length; i++) {
-            this._addLayerToActiveGroup(face, layers[i]); 
+            this._addLayerToActiveGroup(face, layers[i]);
     }
 }
 
