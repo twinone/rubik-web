@@ -7,7 +7,6 @@ require("./vendor/helvetiker.min.js");
 var model = require("./model");
 var Axis = model.Axis;
 var Face = model.Face;
-var Color = model.Color;
 var faces = model.faces;
 var interpolation = require("./interpolation");
 var interpolators = interpolation.interpolators;
@@ -49,14 +48,6 @@ var rotationMatrix = [
     [Face.UP,    Face.RIGHT,  Face.DOWN,   Face.LEFT], // Y
     [Face.FRONT, Face.RIGHT,  Face.BACK,   Face.LEFT], // Z
 ];
-
-function getFaceColor(face, colors) {
-    switch (face) {
-        case RIGHT: return colors.faceRight;   case LEFT:  return colors.faceLeft;
-        case UP:    return colors.faceUp;      case DOWN:  return colors.faceDown;
-        case FRONT: return colors.faceFront;   case BACK:  return colors.faceBack;
-    }
-}
 
 function Cube(options) {
     if (!options)
@@ -651,11 +642,6 @@ Cubie.prototype = Object.create(THREE.Mesh.prototype);
 Cubie.prototype.constructor = Cubie;
 
 function Cubie() {
-    
-}
-
-function updateCubieStickerRotation(cubie, axis, cw) {
-    var idx = model.axisToIndex(axis);
     
 }
 

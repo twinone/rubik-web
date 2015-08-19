@@ -27,7 +27,6 @@ function updateUI() {
 }
 
 function increment(i) {
-    var size = cube.size + 1;
     cube.setSize(cube.size + i);
     updateUI();
 }
