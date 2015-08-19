@@ -2,7 +2,7 @@
  * @author alteredq / http://alteredqualia.com/
  */
 
-THREE.SceneUtils = {
+module.exports = {
 
 	createMultiMaterialObject: function ( geometry, materials ) {
 

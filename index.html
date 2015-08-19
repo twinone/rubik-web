@@ -24,12 +24,12 @@
             
             <div id="pad">
                 <span>Cube size: </span>
-                <input type="button" onclick="increment(-1);" value="-">
+                <input id="decrement-size-button" type="button" value="-">
                 <span id="size"></span>
-                <input type="button" onclick="increment(1);" value="+"><br/>
-                <input type="button" onclick="cube.scramble();" value="Scramble"><br/>
-                <input type="button" onclick="cube.toggleLabels();" value="Labels"><br/>
-                <input type="button" onclick="cube.resetCamera();" value="Reset Camera"><br/>
+                <input id="increment-size-button" type="button" value="+"><br/>
+                <input id="scramble-button" type="button" value="Scramble"><br/>
+                <input id="toggle-labels-button" type="button" value="Labels"><br/>
+                <input id="reset-camera-button" type="button" value="Reset Camera"><br/>
                 <select id="select-interpolator"></select><br/>
             </div>
         </div>

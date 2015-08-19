@@ -29,7 +29,7 @@ interpolators.accelerate = function accelerate(factor) {
 
 // An interpolator where the change starts backward then flings forward.
 interpolators.anticipate = function anticipate(tension) {
-    var tension = tension || 2.0;
+    tension = tension || 2.0;
     return function interpolator(t) {
         return t * t * ((tension + 1) * t - tension);
     };
@@ -38,7 +38,7 @@ interpolators.anticipate = function anticipate(tension) {
 // An interpolator where the change flings forward and overshoots the last value
 // then comes back.
 interpolators.overshoot = function overshoot(tension) {
-    var tension = tension || 2.0;
+    tension = tension || 2.0;
     return function interpolator(t) {
         t -= 1.0;
         return t * t * ((tension + 1) * t + tension) + 1.0;
@@ -48,8 +48,8 @@ interpolators.overshoot = function overshoot(tension) {
 // An interpolator where the change starts backward then flings forward and overshoots
 // the target value and finally goes back to the final value.
 interpolators.anticipateOvershoot = function anticipateOvershoot(tension) {
-    var tension = tension || 2.0;
-    var tension *= 1.2;
+    tension = tension || 2.0;
+    tension *= 1.2;
     var a = function(t, s) { return t * t * ((s + 1) * t - s); }
     var o = function(t, s) { return t * t * ((s + 1) * t + s); }
     return function interpolator(t) {
@@ -58,7 +58,7 @@ interpolators.anticipateOvershoot = function anticipateOvershoot(tension) {
     };
 };
 
-interpolator.bounce = function bounce() {
+interpolators.bounce = function bounce() {
     var bounce = function(t) { return t * t * 8.0; }
     return function interpolator(t) {
         t *= 1.1226;

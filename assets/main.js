@@ -1,5 +1,9 @@
+var Cube = require("./cube").Cube;
+var interpolation = require("./interpolation");
+
+
 var sel = document.getElementById('select-interpolator');
-var ips = INTERPOLATOR.getNames();
+var ips = Object.keys(interpolation.interpolators);
 for (var i = 0; i < ips.length; i++){
     var opt = document.createElement('option');
     opt.value = ips[i];
@@ -39,3 +43,19 @@ cube.setSize(size);
 cube.init();
 cube.showLabels();
 updateUI();
+
+document.getElementById('increment-size-button').addEventListener('click', function() {
+    increment(+1);
+});
+document.getElementById('decrement-size-button').addEventListener('click', function() {
+    increment(-1);
+});
+document.getElementById('scramble-button').addEventListener('click', function() {
+    cube.scramble();
+});
+document.getElementById('toggle-labels-button').addEventListener('click', function() {
+    cube.toggleLabels();
+});
+document.getElementById('reset-camera-button').addEventListener('click', function() {
+    cube.resetCamera();
+});
