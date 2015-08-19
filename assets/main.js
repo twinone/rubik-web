@@ -1,4 +1,5 @@
 var Cube = require("./cube").Cube;
+var defaults = require("./cube").defaults;
 var interpolation = require("./interpolation");
 
 
@@ -11,6 +12,7 @@ for (var i = 0; i < ips.length; i++){
     opt.innerHTML = name.charAt(0).toUpperCase() + name.slice(1);;
     sel.appendChild(opt);
 }
+sel.value = defaults.animation.interpolator;
 
 sel.addEventListener('change', function() {
     cube.setInterpolator(this.value);
