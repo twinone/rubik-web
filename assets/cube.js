@@ -169,8 +169,8 @@ Cube.prototype._optimizeQueue = function _optimizeQueue() {
         }
     }
     
-    console.log("Removed " + String(count - q.length) + " elements from queue");
     this.anim.queue = q;
+    return count - q.length;
 };
 
 function randInt(min, max) {
