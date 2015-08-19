@@ -141,12 +141,15 @@ Cube.prototype.scramble = function scramble() {
         var face = randFace();
         var layer = randInt(0, this.size-1);
         var anim = new Animation(face, [layer]);
-        this._enqueueAnimation(anim);
+        console.log("turning " + i, anim);
+        this._enqueueAnimation(anim, false);
     }
+    this._optimizeQueue();
 };
 
 Cube.prototype._optimizeQueue = function _optimizeQueue() {
     var q = this.anim.queue;
+    var count = q.length;
     // Remove all consecutive oposite moves
     var found = true; // enter the loop
     while (found) {
@@ -165,9 +168,9 @@ Cube.prototype._optimizeQueue = function _optimizeQueue() {
     while (found) {
         found = false;
         for (var i = q.length -4; i >= 0; i--) {
-            if (deepArrayEquals(q[i], q[i+1]) &&
-                deepArrayEquals(q[i], q[i+2]) &&
-                deepArrayEquals(q[i], q[i+3])) {
+            if ((q[i].equals(q[i+1])) &&
+                (q[i].equals(q[i+2])) &&
+                (q[i].equals(q[i+3]))) {
                 found = true;
                 q.splice(i, 4);
                 i -= 3;
@@ -175,6 +178,7 @@ Cube.prototype._optimizeQueue = function _optimizeQueue() {
         }
     }
     
+    console.log("Removed " + String(count - q.length) + " elements from queue");
     this.anim.queue = q;
 };
 
@@ -456,17 +460,17 @@ function Animation(axis, layers) {
 // the state after the animation would be the same as the current state
 Animation.prototype.cancels = function cancels(anim) {
     return this.axis + anim.axis == 0
-        && this.layers.sort().equals(anim.layers.sort());
+        && deepArrayEquals(this.layers.sort(), anim.layers.sort());
 };
 
 Animation.prototype.equals = function equals(anim) {
     return this.axis == anim.axis
-        && this.layers.sort().equals(anim.layers.sort());
+        && deepArrayEquals(this.layers.sort(), anim.layers.sort());
 };
 
-Cube.prototype._enqueueAnimation = function _enqueueAnimation(anim) {
+Cube.prototype._enqueueAnimation = function _enqueueAnimation(anim, optimize) {
     this.anim.queue.push(anim);
-    if (this.shouldOptimizeQueue) {
+    if (this.shouldOptimizeQueue && optimize !== false) {
         this._optimizeQueue();
     }
 };
