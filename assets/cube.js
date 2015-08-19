@@ -43,7 +43,7 @@ var defaults = {
 
 var ORIGIN = new THREE.Vector3(0, 0, 0);
 
-var rotationMatrix = [
+var ROTATION_MATRIX = [
     [Face.UP,   Face.BACK,   Face.DOWN,   Face.FRONT], // X
     [Face.UP,    Face.RIGHT,  Face.DOWN,   Face.LEFT], // Y
     [Face.FRONT, Face.RIGHT,  Face.BACK,   Face.LEFT], // Z
