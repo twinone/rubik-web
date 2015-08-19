@@ -6,8 +6,9 @@ var sel = document.getElementById('select-interpolator');
 var ips = Object.keys(interpolation.interpolators);
 for (var i = 0; i < ips.length; i++){
     var opt = document.createElement('option');
-    opt.value = ips[i];
-    opt.innerHTML = ips[i];
+    var name = ips[i];
+    opt.value = name;
+    opt.innerHTML = name.charAt(0).toUpperCase() + name.slice(1);;
     sel.appendChild(opt);
 }
 
