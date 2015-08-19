@@ -37,7 +37,7 @@ var defaults = {
     
     animation: {
         targetDuration: 300, //ms
-        interpolator: "linear" //name or function
+        interpolator: "overshoot" //name or function
     }
 };
 
