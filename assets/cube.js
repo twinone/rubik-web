@@ -36,7 +36,7 @@ var defaults = {
     },
     
     animation: {
-        targetDuration: 700, //ms
+        targetDuration: 300, //ms
         interpolator: "linear" //name or function
     }
 };
@@ -126,8 +126,8 @@ Cube.prototype.resetCamera = function resetCamera() {
     this.controls.center.set(0,0,0);
 };
 
-Cube.prototype.scramble = function scramble() {
-    var turns = (this.size -1) * 10;
+Cube.prototype.scramble = function scramble(num) {
+    var turns = num || (this.size -1) * 10;
     var expectedLength = this.anim.queue.length + turns;
     
     while (this.anim.queue.length < expectedLength) {
