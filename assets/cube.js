@@ -128,14 +128,15 @@ Cube.prototype.resetCamera = function resetCamera() {
 
 Cube.prototype.scramble = function scramble() {
     var turns = (this.size -1) * 10;
-    for (var i = 0; i < turns; i++) {
+    var expectedLength = this.anim.queue.length + turns;
+    
+    while (this.anim.queue.length < expectedLength) {
         var face = randFace();
         var layer = randInt(0, this.size-1);
         var anim = new Animation(face, [layer]);
-        console.log("turning " + i, anim);
         this._enqueueAnimation(anim, false);
+        this._optimizeQueue();
     }
-    this._optimizeQueue();
 };
 
 Cube.prototype._optimizeQueue = function _optimizeQueue() {
