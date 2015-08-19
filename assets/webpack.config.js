@@ -1,6 +1,7 @@
+var env = process.env["NODE_ENV"];
 var webpack = require("webpack");
 
-module.exports = {
+var config = {
     entry: "./main",
     output: {
         path: __dirname + "/../build",
@@ -9,9 +10,15 @@ module.exports = {
     module: {
         loaders: [
             { test: /\.css$/, loader: "style!css" }
-        ],
-        plugins: [
-            new webpack.optimize.UglifyJsPlugin()
         ]
-    }
+    },
+    plugins: [
+    ]
+
 };
+
+if (env === "production") {
+    config.plugins.push(new webpack.optimize.UglifyJsPlugin());
+}
+
+module.exports = config;
