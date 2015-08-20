@@ -13,7 +13,7 @@ cd ..
 
 rm -rf assets
 git rm -r assets 2>&1 > /dev/null
-git add build index.html
+git add -f build index.html
 
 git commit -m "Automated build ($commit)"
 
