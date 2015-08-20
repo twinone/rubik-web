@@ -17,7 +17,8 @@ var PI = Math.PI;
 var defaults = {
     size: 3,
     cubieWidth: 100,
-    cubieSpacing: 0.07, // in terms of cubieWidth // TODO: Add stickers, change this to 0
+    cubieSpacing: 0.5, // in terms of cubieWidth (now only for debugging)
+    showLabels: true,
     labelMargin: 0.5, // in terms of cubieWidth * cubieSize
     
     colors: {
@@ -36,8 +37,8 @@ var defaults = {
     },
     
     animation: {
-        targetDuration: 300, //ms
-        interpolator: "overshoot" //name or function
+        duration: 100, //ms
+        interpolator: "linear" //name or function
     }
 };
 
@@ -78,16 +79,17 @@ function Cube(options) {
     this.labels = null;
     this.axis = new THREE.Object3D();
     
-    this.shouldShowLabels = false;
+    this.shouldShowLabels = (options.showLabels != undefined) ? options.showLabels : defaults.showLabels;
     this.shouldOptimizeQueue = true;
     
     this.anim = Object.create(defaults.animation);
+
     if (options.animation)
         Object.keys(options.animation).forEach(function(key) {
             this.anim[key] = options.animation[key];
         });
+    
 
-    this.anim.duration = this.anim.targetDuration;
     this.anim.animating = false;
     this.anim.current = null;
     this.anim.queue = [];
@@ -95,7 +97,19 @@ function Cube(options) {
     this.anim.interpolator = getActualInterpolator(this.anim.interpolator);
     
     this.isInitialized = false;
+    
+    this.init();
 };
+
+Cube.prototype.isAnimating = function isAnimating() { return this.anim.animating; }
+
+Cube.prototype.setAnimationDuration = function setAnimationDuration(duration) {
+    if (this.isAnimating()) {
+        this.anim.duration = duration;
+    } else {
+        this.anim.newDuration = duration;
+    }
+}
 
 function getActualInterpolator(interpolator) {
     if (typeof interpolator === "string") {
@@ -143,7 +157,8 @@ Cube.prototype._optimizeQueue = function _optimizeQueue() {
     var q = this.anim.queue;
     var count = q.length;
     // Remove all consecutive oposite moves
-    var found = true; // enter the loop
+    var found = true; // enter the loop1. race condition between two `onAnimationEnd()`s.
+2. 
     while (found) {
         found = false;
         for (var i = q.length -2; i >= 0; i--) {
@@ -202,12 +217,19 @@ Cube.prototype.width = function() {
 Cube.prototype._setupCubies = function() {
     var cubieGeometry = new THREE.BoxGeometry(this.cubieWidth, this.cubieWidth, this.cubieWidth);
     
+    var image = document.createElement('img');
+    var map = new THREE.Texture(image);
+    image.onload = function()  {
+        map.needsUpdate = true;
+    };
+    image.src =  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAAVklEQVRo3u3RsQ0AIAwDwYT9dzYlTIAUcd+l8ylV0t/1fSSZMbrP7DX9AwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACSXrQBS9IDcNBhO+QAAAAASUVORK5CYII=';
+    
     for (var i = 0; i < this.size; i++) {
         this.cubies[i] = [];
         for (var j = 0; j < this.size; j++) {
             this.cubies[i][j] = [];
             for (var k = 0; k < this.size; k++) {
-                var cubie = new THREE.Mesh(cubieGeometry, this._getFaceMaterial(i, j, k));
+                var cubie = new THREE.Mesh(cubieGeometry, this._getFaceMaterial(i, j, k, map));
                 cubie.origX = i;
                 cubie.origY = j;
                 cubie.origZ = k;
@@ -233,11 +255,7 @@ Cube.prototype._init = function _init() {
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000);
 
-    this.keyPressListener = function(e) {
-        self._onKeyPress(e);
-    }
-    window.addEventListener('keypress', this.keyPressListener);
-    
+   
     this.resizeListener = function(e) {
         self._onResize(e);   
     }
@@ -245,7 +263,6 @@ Cube.prototype._init = function _init() {
     
     this.renderer.setClearColor(this.colors.background);
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(this.renderer.domElement);
     
     this.active = new THREE.Object3D()
     this.scene.add(this.active);
@@ -257,21 +274,37 @@ Cube.prototype._init = function _init() {
     
     this._setupCamera();
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+     
+    this.renderer.domElement.addEventListener('mousedown', function(e) {
+        e.target.focus();
+    });
+    window.addEventListener('keypress', function(e) {
+        self._onKeyPress(e);
+    }, false);
+    
+   
     
     function render () {
         self.dt = self.clock.getDelta();
 
         self._updateLabelOrientation();
-        
+
         if (self.anim.animating) {
             self._updateAnimation();
-        } else if (self.anim.queue.length != 0) {
-            self.anim.duration = self.anim.targetDuration * 
-                Math.max(0.3, Math.pow(0.9, self.anim.queue.length/2));
-            self._startAnimation(self.anim.queue.shift());
+        } else {
+            // see setAnimationDuration()
+            if (self.anim.newDuration) {
+                self.anim.duration = self.anim.newDuration;
+                self.anim.newDuration = undefined;
+            }
+            if (self.anim.queue.length != 0) {
+                self.anim.currDuration = self.anim.duration * 
+                    Math.max(0.3, Math.pow(0.9, self.anim.queue.length/2));
+                self._startAnimation(self.anim.queue.shift());
+            }
         }
-        self.renderer.render(self.scene, self.camera);
         
+        self.renderer.render(self.scene, self.camera);
         self.animationFrameId = requestAnimationFrame(render);
     }
 
@@ -307,25 +340,27 @@ Cube.prototype._onResize = function _onResize() {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
 };
 
-Cube.prototype._getFaceMaterial = function _getFaceMaterial(x, y, z) {
+Cube.prototype._getFaceMaterial = function _getFaceMaterial(x, y, z, map) {
     var d = new THREE.MeshBasicMaterial({color: this.colors.cube});
     var s = this.size -1;
     var materials = [
         // R L B F U D
-        x == s ? getColorMaterial(this.colors.faceRight) : d,
-        x == 0 ? getColorMaterial(this.colors.faceLeft) : d,
-        y == s ? getColorMaterial(this.colors.faceBack) : d,
-        y == 0 ? getColorMaterial(this.colors.faceFront) : d,
-        z == s ? getColorMaterial(this.colors.faceUp) : d,
-        z == 0 ? getColorMaterial(this.colors.faceDown) : d
+        x == s ? getStickerMaterial(this.colors.faceRight, map) : d,
+        x == 0 ? getStickerMaterial(this.colors.faceLeft, map) : d,
+        y == s ? getStickerMaterial(this.colors.faceBack, map) : d,
+        y == 0 ? getStickerMaterial(this.colors.faceFront, map) : d,
+        z == s ? getStickerMaterial(this.colors.faceUp, map) : d,
+        z == 0 ? getStickerMaterial(this.colors.faceDown, map) : d
     ];
     return new THREE.MeshFaceMaterial(materials);
 };
 
-function getColorMaterial(color) {
-    return new THREE.MeshBasicMaterial(
-        {color:color, side: THREE.FrontSide}
-    );
+function getStickerMaterial(color, map) {
+    return new THREE.MeshBasicMaterial({
+            color: color,
+            map: map,
+            side: THREE.FrontSide
+        });
 }
 
 
@@ -380,25 +415,36 @@ Cube.prototype.hideLabels = function hideLabels() {
     this.shouldShowLabels = false;
 };
 
+// Sets the cubie's position in the scene according to it's position in the matrix
+Cube.prototype._setCubiePosition = function _setCubiePosition(x, y, z) {
+    this.cubies[x][y][z].position.set()
+}
 
 Cube.prototype._alignCubies = function _alignCubies() {
     for (var i = 0; i < this.size; i++) {
         for (var j = 0; j < this.size; j++) {
             for (var k = 0; k < this.size; k++) {
+                if (i + j + k == 0) console.log("cubie (0,0,0) rotation B: ", this.cubies[0][0][0].rotation);
+                roundRotation(this.cubies[i][j][k]);
+                if (i + j + k == 0) console.log("cubie (0,0,0) rotation A: ", this.cubies[0][0][0].rotation);
+
                 this.cubies[i][j][k].position.set(
                     (i-(this.size-1)/2) * this.cubieWidth*(1+this.cubieSpacing),
                     (j-(this.size-1)/2) * this.cubieWidth*(1+this.cubieSpacing),
                     (k-(this.size-1)/2) * this.cubieWidth*(1+this.cubieSpacing));
-                roundRotation(this.cubies[i][j][k]);
             }
         }
     }   
 };
 
 function roundRotation(cubie) {
+    var rot = cubie.rotation;
     cubie.rotation.x = intRound(mod(cubie.rotation.x, PI*2), PI/2);
     cubie.rotation.y = intRound(mod(cubie.rotation.y, PI*2), PI/2);
     cubie.rotation.z = intRound(mod(cubie.rotation.z, PI*2), PI/2);
+/*
+    console.log(rot, " > ", cubie.rotation);
+*/
 }
 function mod(a, b) {
     var m = a % b;
@@ -479,7 +525,7 @@ Cube.prototype._startAnimation = function _startAnimation(animation) {
 Cube.prototype._updateAnimation = function _updateAnimation() {
     
     var dt = (this.clock.getElapsedTime() - this.anim.start);
-    var dur = this.anim.duration / 1000;
+    var dur = this.anim.currDuration / 1000;
     var pct = dt / dur;
     if (pct > 1.0) {
         pct = 1.0;
