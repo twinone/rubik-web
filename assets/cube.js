@@ -50,7 +50,6 @@ function Cube(options) {
             this.colors[key] = options.colors[key];
         });
     
-    this.cubiesObject = null;
     this.cubies = [];
     this.active = null; // init
     this.labels = null;
@@ -143,8 +142,14 @@ Cube.prototype._performRaycast = function _performRaycast(e) {
 	var ray = new THREE.Raycaster(this.camera.position,
                                   vector.sub(this.camera.position).normalize());
 
+    var cubies = [];
+    for (var i = 0; i < this.size; i++)
+        for (var j = 0; j < this.size; j++)
+            for (var k = 0; k < this.size; k++) {
+                cubies.push(this.cubies[i][j][k]);
+            }
 	// cubies
-	var intersects = ray.intersectObjects(this.cubiesObject.children);
+	var intersects = ray.intersectObjects(cubies);
     if (intersects.length > 0) {
 
         var elem = intersects[0];
@@ -187,7 +192,6 @@ Cube.prototype._optimizeQueue = function _optimizeQueue() {
     var count = q.length;
     // Remove all consecutive oposite moves
     var found = true; // enter the loop
-2. 
     while (found) {
         found = false;
         for (var i = q.length -2; i >= 0; i--) {
@@ -263,7 +267,7 @@ Cube.prototype._setupCubies = function() {
                 cubie.coords = new THREE.Vector3(i, j, k);
                 cubie.up.set(0, 0, 1);
                 this.cubies[i][j][k] = cubie;
-                this.cubiesObject.add(cubie);
+                this.scene.add(cubie);
                 cubie.position.set(
                     (i-(this.size-1)/2) * this.cubieWidth*(1+this.cubieSpacing),
                     (j-(this.size-1)/2) * this.cubieWidth*(1+this.cubieSpacing),
@@ -272,7 +276,6 @@ Cube.prototype._setupCubies = function() {
             }
         }
     }   
-    this.scene.add(this.cubiesObject);
 };
 
 Cube.prototype.init = function init() {
@@ -297,8 +300,6 @@ Cube.prototype._init = function _init() {
     
     this.active = new THREE.Object3D();
     this.scene.add(this.active);
-    this.cubiesObject = new THREE.Object3D();
-    this.scene.add(this.cubiesObject);
     
     this._setupCubies();
     
@@ -361,7 +362,6 @@ Cube.prototype.destroy = function destroy() {
     this.labels = null;
     empty(this.active);
     empty(this.cubies);
-    empty(this.cubiesObject);
     this.anim.queue = [];
     this.anim.animating = false;
     
@@ -457,7 +457,7 @@ Cube.prototype._alignCubies = function _alignCubies() {
         for (var j = 0; j < this.size; j++) {
             for (var k = 0; k < this.size; k++) {
                 roundRotation(this.cubies[i][j][k]);
-
+                this.cubies[i][j][k].coords.set(i, j, k);
                 this.cubies[i][j][k].position.set(
                     (i-(this.size-1)/2) * this.cubieWidth*(1+this.cubieSpacing),
                     (j-(this.size-1)/2) * this.cubieWidth*(1+this.cubieSpacing),
@@ -493,7 +493,10 @@ Cube.prototype._onKeyPress = function onKeyPress(e) {
     var cw = key.toUpperCase() === key ^ key.shiftKey;
     var face = charToFace(key);
     
-    var layer = (face == Face.FRONT || face == Face.LEFT || face == Face.DOWN) ? layerNumber : this.size -1 - layerNumber;
+    var layer = (face == Face.FRONT || face == Face.LEFT || face == Face.DOWN) 
+        ? layerNumber 
+        : this.size -1 - layerNumber;
+    
     if (face !== null) {
         layerNumber = 0;
         this._enqueueAnimation(new Animation(cw ? face: -face,[layer]));
@@ -664,9 +667,14 @@ function makeLine(vec, color) {
 }
 
 
+// If layers is not provided, all are selected
 Cube.prototype._addLayersToActiveGroup = function _addLayersToActiveGroup(face, layers) {
+    if (!layers || layers.length == 0) {
+        layers = [];
+        for (var i = 0; i < this.size; i++) { layers.push(i); }
+    }
     for (var i = 0; i < layers.length; i++) {
-            this._addLayerToActiveGroup(face, layers[i]);
+        this._addLayerToActiveGroup(face, layers[i]);
     }
 };
 
