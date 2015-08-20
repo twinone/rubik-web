@@ -261,6 +261,7 @@ Cube.prototype._setupCubies = function() {
                 var cubie = new THREE.Mesh(cubieGeometry, this._getFaceMaterial(i, j, k, map));
                 cubie.origCoords = new THREE.Vector3(i, j, k);
                 cubie.coords = new THREE.Vector3(i, j, k);
+                cubie.up.set(0, 0, 1);
                 this.cubies[i][j][k] = cubie;
                 this.cubiesObject.add(cubie);
                 cubie.position.set(
@@ -411,23 +412,10 @@ function getStickerMaterial(color, map, wireframe) {
 Cube.prototype._updateLabelOrientation = function _updateLabelOrientation() {
     if (!this.labels) return;
     for (var i = 0; i < this.labels.children.length; i++) {
-        this.labels.children[i].lookAt(this.camera.position);
-        this.labels.children[i].up = this.camera.up;
+
+        this.labels.children[i].quaternion.copy(this.camera.quaternion);
     }
 };
-function showAxis() { //FIXME
-    var s = this.cubieWidth * CUBE.SIZE / 2;
-    var axisHint = new THREE.Object3D();
-    axisHint.add(makeLine(new THREE.Vector3(s, 0, 0), this.colors.axisX));
-    axisHint.add(makeLine(new THREE.Vector3(0, s, 0), this.colors.axisY));
-    axisHint.add(makeLine(new THREE.Vector3(0, 0, s), this.colors.axisZ));
-    
-    var s = this.cubieWidth* (1+this.cubieSpacing) * CUBE.SIZE/2;
-    axisHint.position.set(-s, -s, -s);
-
-    scene.add(axisHint);
-}
-
 
 Cube.prototype.toggleLabels = function toggleLabels() {
     if (this.labels) this.hideLabels();
