@@ -17,11 +17,15 @@
             margin-top: 2px;
             margin-bottom: 2px;
         }
+        #anim-duration {
+            width: 4em;
+            text-align: right;
+        }
     </style>
     </head>
     
     <body>
-        <canvas id="canvas"></canvas>
+        <canvas tabindex="0" id="canvas"></canvas>
         
         <div id="container">
             
@@ -33,11 +37,13 @@
                 <input id="scramble-button" type="button" value="Scramble"><br/>
                 <input id="toggle-labels-button" type="button" value="Labels"><br/>
                 <input id="reset-camera-button" type="button" value="Reset Camera"><br/>
-                <span>Interpolator:</span><br>
-                <select id="select-interpolator"></select><br/>
+                <span>Animation:</span><br>
+                <select id="select-interpolator"></select>
+                <input id="anim-duration" type="text">
+                <span>ms</span>
             </div>
+            
         </div>
-        
         <script src="build/bundle.js"></script>
     </body>
 </html>

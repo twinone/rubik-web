@@ -543,6 +543,8 @@ Cube.prototype._updateAnimation = function _updateAnimation() {
 };
 
 Cube.prototype._onAnimationEnd = function _onAnimationEnd() {
+    this.active.updateMatrixWorld();
+    
     // Re-add items to the scene
     while (this.active.children.length > 0) {
         var child = this.active.children[0];
