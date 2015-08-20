@@ -17,7 +17,7 @@ var PI = Math.PI;
 var defaults = {
     size: 3,
     cubieWidth: 100,
-    cubieSpacing: 0.5, // in terms of cubieWidth (now only for debugging)
+    cubieSpacing: 0, // in terms of cubieWidth (now only for debugging)
     showLabels: true,
     labelMargin: 0.5, // in terms of cubieWidth * cubieSize
     
