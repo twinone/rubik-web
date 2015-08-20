@@ -1,7 +1,9 @@
 var Cube = require("./cube").Cube;
+
 var defaults = require("./cube").defaults;
 var interpolation = require("./interpolation");
 
+var Face = require("./model").Face;
 
 var sel = document.getElementById('select-interpolator');
 var ips = Object.keys(interpolation.interpolators);

@@ -115,7 +115,7 @@ Cube.prototype.setInterpolator = function setInterpolator(interpolator) {
 }
 
 Cube.prototype._setupCamera = function _setupCamera() {
-    var camPos = this.cubieWidth* (1+this.cubieSpacing) * this.size/2 * 4;
+    var camPos = this.cameraDistance;
     this.camera.position.set(-camPos, -camPos, camPos);
     this.camera.up.set(0, 0, 1);
     this.camera.lookAt(ORIGIN);
@@ -278,6 +278,15 @@ Cube.prototype._setupCubies = function() {
     }   
 };
 
+
+Cube.prototype.lookAtFace = function lookAtFace(face) {
+    var dist = this.cameraDistance;
+    dist = Math.sqrt(dist*dist*3);
+    var v = getAxisVectorFromFace(face);
+    v.multiplyScalar(dist);
+    this.camera.position.copy(v);
+    this.camera.lookAt(ORIGIN);
+}
 Cube.prototype.init = function init() {
     this._init();
 };
@@ -287,6 +296,7 @@ Cube.prototype._init = function _init() {
     
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000);
+    this.cameraDistance = this.cubieWidth* (1+this.cubieSpacing) * this.size/2 * 4;
 
     this.projector = new THREE.Projector();
    
@@ -493,6 +503,13 @@ Cube.prototype._onKeyPress = function onKeyPress(e) {
     var cw = key.toUpperCase() === key ^ key.shiftKey;
     var face = charToFace(key);
     
+    console.log("ctrl: ", key.ctrlKey, "face: ", face);
+    if (key.ctrlKey && face) {
+        console.log("control");
+        e.preventDefault();
+        this.lookAtFace(face);
+    }
+    
     var layer = (face == Face.FRONT || face == Face.LEFT || face == Face.DOWN) 
         ? layerNumber 
         : this.size -1 - layerNumber;
@@ -508,6 +525,8 @@ Cube.prototype._onKeyPress = function onKeyPress(e) {
         }
     }
 };
+
+
            
 function charToAxis(letter) {
     switch (letter.toUpperCase()) {
