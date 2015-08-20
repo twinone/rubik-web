@@ -17,6 +17,6 @@ git add -f build index.html
 
 git commit -m "Automated build ($commit)"
 
-if [ "$1" == "--push" ]; then git push origin gh-pages; fi
+if [ "$1" != "--no-push" ]; then git push origin gh-pages; fi
 
 git checkout $branch
