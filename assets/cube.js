@@ -186,7 +186,7 @@ Cube.prototype._optimizeQueue = function _optimizeQueue() {
     var q = this.anim.queue;
     var count = q.length;
     // Remove all consecutive oposite moves
-    var found = true; // enter the loop1. race condition between two `onAnimationEnd()`s.
+    var found = true; // enter the loop
 2. 
     while (found) {
         found = false;
