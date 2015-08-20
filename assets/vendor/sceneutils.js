@@ -1,6 +1,7 @@
 /**
  * @author alteredq / http://alteredqualia.com/
  */
+var THREE = require("./three");
 
 module.exports = {
 
@@ -28,11 +29,9 @@ module.exports = {
 
 	attach: function ( child, scene, parent ) {
 
-/*
 		var matrixWorldInverse = new THREE.Matrix4();
 		matrixWorldInverse.getInverse( parent.matrixWorld );
 		child.applyMatrix( matrixWorldInverse );
-*/
 		scene.remove( child );
 		parent.add( child );
 

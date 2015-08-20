@@ -29,35 +29,46 @@ function updateUI() {
     document.getElementById('size').textContent = cube.size;
 }
 
-function increment(i) {
-    cube.setSize(cube.size + i);
-    updateUI();
-}
-
-
 var size = getParameterByName("size");
 if (!size) size = 3;
 
 var size = Number(size);
 
-var cube = new Cube();
-cube.setSize(size);
-cube.init();
-cube.showLabels();
+var cube = new Cube({
+    size : size,
+    showLabels: true
+});
+
 updateUI();
 
-document.getElementById('increment-size-button').addEventListener('click', function() {
+
+function increment(i) {
+    cube.setSize(cube.size + i);
+    updateUI();
+}
+function addListener(toWhat, event, listener) {
+    document.getElementById(toWhat).addEventListener(event, listener);
+}
+
+document.getElementById('anim-duration').value = 300;
+
+addListener('anim-duration', 'change', function() {
+    console.log("anim duration changed: " + this.value);
+    cube.setAnimationDuration(this.value);
+});
+
+addListener('increment-size-button', 'click', function() {
     increment(+1);
 });
-document.getElementById('decrement-size-button').addEventListener('click', function() {
+addListener('decrement-size-button', 'click', function() {
     increment(-1);
 });
-document.getElementById('scramble-button').addEventListener('click', function() {
+addListener('scramble-button', 'click', function() {
     cube.scramble();
 });
-document.getElementById('toggle-labels-button').addEventListener('click', function() {
+addListener('toggle-labels-button', 'click', function() {
     cube.toggleLabels();
 });
-document.getElementById('reset-camera-button').addEventListener('click', function() {
+addListener('reset-camera-button', 'click', function() {
     cube.resetCamera();
 });

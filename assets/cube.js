@@ -3,43 +3,21 @@ var orbitcontrols = require("./orbitcontrols");
 var OrbitControls = orbitcontrols.OrbitControls;
 var sceneutils = require("./vendor/sceneutils");
 require("./vendor/helvetiker.min.js");
+require("./vendor/projector.js");
 
 var model = require("./model");
 var Axis = model.Axis;
 var Face = model.Face;
 var faces = model.faces;
+
 var interpolation = require("./interpolation");
 var interpolators = interpolation.interpolators;
+
+var defaults = require("./defaults").defaults;
 
 var PI = Math.PI;
 
 
-var defaults = {
-    size: 3,
-    cubieWidth: 100,
-    cubieSpacing: 0.07, // in terms of cubieWidth // TODO: Add stickers, change this to 0
-    labelMargin: 0.5, // in terms of cubieWidth * cubieSize
-    
-    colors: {
-        faceRight: 0x009E60,
-        faceLeft: 0x0051BA,
-        faceUp: 0xFFD500,
-        faceDown: 0xFFFFFF,
-        faceFront: 0xC41E3A,
-        faceBack: 0xFF5800,
-        axisX: 0xAA0000,
-        axisY: 0x00AA00,
-        axisZ: 0x0000AA,
-        label: 0x88004D40,
-        background: 0xFFFFFF,
-        cube: 0x000000,
-    },
-    
-    animation: {
-        targetDuration: 300, //ms
-        interpolator: "overshoot" //name or function
-    }
-};
 
 var ORIGIN = new THREE.Vector3(0, 0, 0);
 
@@ -52,7 +30,6 @@ var ROTATION_MATRIX = [
 function Cube(options) {
     if (!options)
         options = {};
-
     this.dt = 0,
     this.scene = null;
     this.camera = null;
@@ -73,21 +50,23 @@ function Cube(options) {
             this.colors[key] = options.colors[key];
         });
     
+    this.cubiesObject = null;
     this.cubies = [];
     this.active = null; // init
     this.labels = null;
     this.axis = new THREE.Object3D();
     
-    this.shouldShowLabels = false;
+    this.shouldShowLabels = (options.showLabels != undefined) ? options.showLabels : defaults.showLabels;
     this.shouldOptimizeQueue = true;
     
     this.anim = Object.create(defaults.animation);
+
     if (options.animation)
         Object.keys(options.animation).forEach(function(key) {
             this.anim[key] = options.animation[key];
         });
+    
 
-    this.anim.duration = this.anim.targetDuration;
     this.anim.animating = false;
     this.anim.current = null;
     this.anim.queue = [];
@@ -95,7 +74,29 @@ function Cube(options) {
     this.anim.interpolator = getActualInterpolator(this.anim.interpolator);
     
     this.isInitialized = false;
+    
+    this.mouse = {
+        x: 0,
+        y: 0
+    }
+    
+    this.wireframe = defaults.wireframe;
+    
+    this.init();
 };
+
+Cube.prototype.isAnimating = function isAnimating() { return this.anim.animating; }
+
+Cube.prototype.setAnimationDuration = function setAnimationDuration(duration) {
+    // Don't warn because this may be user input and we don't want
+    // developers to do the same checks as we do.
+    if (isNaN(duration) || !isFinite(duration)) return;
+    if (this.isAnimating()) {
+        this.anim.duration = duration;
+    } else {
+        this.anim.newDuration = duration;
+    }
+}
 
 function getActualInterpolator(interpolator) {
     if (typeof interpolator === "string") {
@@ -117,7 +118,7 @@ Cube.prototype.setInterpolator = function setInterpolator(interpolator) {
 Cube.prototype._setupCamera = function _setupCamera() {
     var camPos = this.cubieWidth* (1+this.cubieSpacing) * this.size/2 * 4;
     this.camera.position.set(-camPos, -camPos, camPos);
-    this.camera.up.set(0,0,1);
+    this.camera.up.set(0, 0, 1);
     this.camera.lookAt(ORIGIN);
 };
 Cube.prototype.resetCamera = function resetCamera() {
@@ -125,6 +126,48 @@ Cube.prototype.resetCamera = function resetCamera() {
 
     this.controls.center.set(0,0,0);
 };
+
+Cube.prototype._performRaycast = function _performRaycast(e) {
+    if (this.anim.animating) { console.log("not raycasting while animating!"); return; }
+    
+    // update the mouse position
+    // update the mouse variable
+	this.mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+	this.mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    
+    // create a Ray with origin at the mouse position
+	// and direction into the scene (camera direction)
+	var vector = new THREE.Vector3(this.mouse.x, this.mouse.y, 1);
+    vector.unproject(this.camera);
+    
+	var ray = new THREE.Raycaster(this.camera.position,
+                                  vector.sub(this.camera.position).normalize());
+
+	// cubies
+	var intersects = ray.intersectObjects(this.cubiesObject.children);
+    if (intersects.length > 0) {
+
+        var elem = intersects[0];
+        // determine if we hit a cubie
+        // probably yes, since we only ask for intersection with cubies
+        if (!elem.object.hasOwnProperty("coords")) { console.log("Intersected with non-cubie"); return; }
+        
+        this._onCubieDragStart(elem.object.coords, elem.face.normal);
+    }                
+    // labels
+    if (this.showLabels) {
+        // intersects = ray.intersectObjects(this.labels.children);
+            
+        // TODO put labels in a container
+        // Clicking only the letter is very difficult
+    }
+    
+    
+}
+
+Cube.prototype._onCubieDragStart = function _onCubieDragStart(coords, direction) {
+    console.log("onCubieDragStart coords=", coords, " normal=", direction);
+}
 
 Cube.prototype.scramble = function scramble(num) {
     var turns = num || (this.size -1) * 10;
@@ -143,7 +186,8 @@ Cube.prototype._optimizeQueue = function _optimizeQueue() {
     var q = this.anim.queue;
     var count = q.length;
     // Remove all consecutive oposite moves
-    var found = true; // enter the loop
+    var found = true; // enter the loop1. race condition between two `onAnimationEnd()`s.
+2. 
     while (found) {
         found = false;
         for (var i = q.length -2; i >= 0; i--) {
@@ -202,25 +246,32 @@ Cube.prototype.width = function() {
 Cube.prototype._setupCubies = function() {
     var cubieGeometry = new THREE.BoxGeometry(this.cubieWidth, this.cubieWidth, this.cubieWidth);
     
+    var image = document.createElement('img');
+    var map = new THREE.Texture(image);
+    image.onload = function()  {
+        map.needsUpdate = true;
+    };
+    image.src =  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAAVklEQVRo3u3RsQ0AIAwDwYT9dzYlTIAUcd+l8ylV0t/1fSSZMbrP7DX9AwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACSXrQBS9IDcNBhO+QAAAAASUVORK5CYII=';
+    
     for (var i = 0; i < this.size; i++) {
         this.cubies[i] = [];
         for (var j = 0; j < this.size; j++) {
             this.cubies[i][j] = [];
             for (var k = 0; k < this.size; k++) {
-                var cubie = new THREE.Mesh(cubieGeometry, this._getFaceMaterial(i, j, k));
-                cubie.origX = i;
-                cubie.origY = j;
-                cubie.origZ = k;
+                var cubie = new THREE.Mesh(cubieGeometry, this._getFaceMaterial(i, j, k, map));
+                cubie.origCoords = new THREE.Vector3(i, j, k);
+                cubie.coords = new THREE.Vector3(i, j, k);
                 this.cubies[i][j][k] = cubie;
+                this.cubiesObject.add(cubie);
                 cubie.position.set(
                     (i-(this.size-1)/2) * this.cubieWidth*(1+this.cubieSpacing),
                     (j-(this.size-1)/2) * this.cubieWidth*(1+this.cubieSpacing),
                     (k-(this.size-1)/2) * this.cubieWidth*(1+this.cubieSpacing)
                 );
-                this.scene.add(cubie);
             }
         }
     }   
+    this.scene.add(this.cubiesObject);
 };
 
 Cube.prototype.init = function init() {
@@ -233,11 +284,8 @@ Cube.prototype._init = function _init() {
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000);
 
-    this.keyPressListener = function(e) {
-        self._onKeyPress(e);
-    }
-    window.addEventListener('keypress', this.keyPressListener);
-    
+    this.projector = new THREE.Projector();
+   
     this.resizeListener = function(e) {
         self._onResize(e);   
     }
@@ -245,10 +293,12 @@ Cube.prototype._init = function _init() {
     
     this.renderer.setClearColor(this.colors.background);
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(this.renderer.domElement);
     
-    this.active = new THREE.Object3D()
+    this.active = new THREE.Object3D();
     this.scene.add(this.active);
+    this.cubiesObject = new THREE.Object3D();
+    this.scene.add(this.cubiesObject);
+    
     this._setupCubies();
     
     if (this.shouldShowLabels) {
@@ -258,20 +308,39 @@ Cube.prototype._init = function _init() {
     this._setupCamera();
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     
+    this.onMouseDownListener = function onMouseDownListener(e) {
+        self._performRaycast(e);
+    }
+    this.renderer.domElement.addEventListener('mousedown', this.onMouseDownListener);
+    
+    this.keyPressListener = function(e) {
+        self._onKeyPress(e);
+    };
+    window.addEventListener('keypress', this.keyPressListener);
+    
+   
+    
     function render () {
         self.dt = self.clock.getDelta();
 
         self._updateLabelOrientation();
-        
+
         if (self.anim.animating) {
             self._updateAnimation();
-        } else if (self.anim.queue.length != 0) {
-            self.anim.duration = self.anim.targetDuration * 
-                Math.max(0.3, Math.pow(0.9, self.anim.queue.length/2));
-            self._startAnimation(self.anim.queue.shift());
+        } else {
+            // see setAnimationDuration()
+            if (self.anim.newDuration) {
+                self.anim.duration = self.anim.newDuration;
+                self.anim.newDuration = undefined;
+            }
+            if (self.anim.queue.length != 0) {
+                self.anim.currDuration = self.anim.duration * 
+                    Math.max(0.3, Math.pow(0.9, self.anim.queue.length/2));
+                self._startAnimation(self.anim.queue.shift());
+            }
         }
-        self.renderer.render(self.scene, self.camera);
         
+        self.renderer.render(self.scene, self.camera);
         self.animationFrameId = requestAnimationFrame(render);
     }
 
@@ -285,16 +354,17 @@ Cube.prototype.width = function width() {
 
 Cube.prototype.destroy = function destroy() {
     cancelAnimationFrame(this.animationFrameId);
-    this.renderer.domElement.addEventListener('dblclick', null, false);
     this.scene = null;
     this.camera = null;
     this.controls = null;
     this.labels = null;
     empty(this.active);
-    this.active = null;
-    this.anim.queue = [];
     empty(this.cubies);
+    empty(this.cubiesObject);
+    this.anim.queue = [];
     this.anim.animating = false;
+    
+    this.renderer.domElement.removeEventListener('mousedown', this.onMouseDownListener);
     window.removeEventListener('keypress', this.keyPressListener);
     window.removeEventListener('resize', this.resizeListener);
 };
@@ -307,25 +377,34 @@ Cube.prototype._onResize = function _onResize() {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
 };
 
-Cube.prototype._getFaceMaterial = function _getFaceMaterial(x, y, z) {
-    var d = new THREE.MeshBasicMaterial({color: this.colors.cube});
+Cube.prototype._getFaceMaterial = function _getFaceMaterial(x, y, z, map) {
+    var wf = this.wireframe;
+    var d = new THREE.MeshBasicMaterial({
+        color: this.colors.cube,
+        wireframe: wf,
+        wireframeLinewidth: 2
+    });
     var s = this.size -1;
     var materials = [
         // R L B F U D
-        x == s ? getColorMaterial(this.colors.faceRight) : d,
-        x == 0 ? getColorMaterial(this.colors.faceLeft) : d,
-        y == s ? getColorMaterial(this.colors.faceBack) : d,
-        y == 0 ? getColorMaterial(this.colors.faceFront) : d,
-        z == s ? getColorMaterial(this.colors.faceUp) : d,
-        z == 0 ? getColorMaterial(this.colors.faceDown) : d
+        x == s ? getStickerMaterial(this.colors.faceRight, map, wf) : d,
+        x == 0 ? getStickerMaterial(this.colors.faceLeft, map, wf) : d,
+        y == s ? getStickerMaterial(this.colors.faceBack, map, wf) : d,
+        y == 0 ? getStickerMaterial(this.colors.faceFront, map, wf) : d,
+        z == s ? getStickerMaterial(this.colors.faceUp, map, wf) : d,
+        z == 0 ? getStickerMaterial(this.colors.faceDown, map, wf) : d
     ];
     return new THREE.MeshFaceMaterial(materials);
 };
 
-function getColorMaterial(color) {
-    return new THREE.MeshBasicMaterial(
-        {color:color, side: THREE.FrontSide}
-    );
+function getStickerMaterial(color, map, wireframe) {
+    return new THREE.MeshBasicMaterial({
+        color: color,
+        map: map,
+        wireframe: wireframe,
+        wireframeLinewidth: 2,
+        side: THREE.FrontSide
+    });
 }
 
 
@@ -380,22 +459,28 @@ Cube.prototype.hideLabels = function hideLabels() {
     this.shouldShowLabels = false;
 };
 
+// Sets the cubie's position in the scene according to it's position in the matrix
+Cube.prototype._setCubiePosition = function _setCubiePosition(x, y, z) {
+    this.cubies[x][y][z].position.set()
+}
 
 Cube.prototype._alignCubies = function _alignCubies() {
     for (var i = 0; i < this.size; i++) {
         for (var j = 0; j < this.size; j++) {
             for (var k = 0; k < this.size; k++) {
+                roundRotation(this.cubies[i][j][k]);
+
                 this.cubies[i][j][k].position.set(
                     (i-(this.size-1)/2) * this.cubieWidth*(1+this.cubieSpacing),
                     (j-(this.size-1)/2) * this.cubieWidth*(1+this.cubieSpacing),
                     (k-(this.size-1)/2) * this.cubieWidth*(1+this.cubieSpacing));
-                roundRotation(this.cubies[i][j][k]);
             }
         }
     }   
 };
 
 function roundRotation(cubie) {
+    var rot = cubie.rotation;
     cubie.rotation.x = intRound(mod(cubie.rotation.x, PI*2), PI/2);
     cubie.rotation.y = intRound(mod(cubie.rotation.y, PI*2), PI/2);
     cubie.rotation.z = intRound(mod(cubie.rotation.z, PI*2), PI/2);
@@ -479,7 +564,7 @@ Cube.prototype._startAnimation = function _startAnimation(animation) {
 Cube.prototype._updateAnimation = function _updateAnimation() {
     
     var dt = (this.clock.getElapsedTime() - this.anim.start);
-    var dur = this.anim.duration / 1000;
+    var dur = this.anim.currDuration / 1000;
     var pct = dt / dur;
     if (pct > 1.0) {
         pct = 1.0;
@@ -497,6 +582,8 @@ Cube.prototype._updateAnimation = function _updateAnimation() {
 };
 
 Cube.prototype._onAnimationEnd = function _onAnimationEnd() {
+    this.active.updateMatrixWorld();
+    
     // Re-add items to the scene
     while (this.active.children.length > 0) {
         var child = this.active.children[0];
