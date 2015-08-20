@@ -497,12 +497,25 @@ Cube.prototype._onKeyPress = function onKeyPress(e) {
         ? layerNumber 
         : this.size -1 - layerNumber;
     
-    if (face !== null) {
+    if (face) {
         layerNumber = 0;
-        this._enqueueAnimation(new Animation(cw ? face: -face,[layer]));
+        this._enqueueAnimation(new Animation(cw ? face : -face, [layer]));
+    } else {
+        var axis = charToAxis(key);
+        var layers = []; for (var i = 0; i < this.size; i++) layers.push(i);
+        if (axis) {
+            this._enqueueAnimation(new Animation(cw ? axis : -axis, layers));
+        }
     }
 };
-            
+           
+function charToAxis(letter) {
+    switch (letter.toUpperCase()) {
+        case 'X': return Axis.CUBE_X;
+        case 'Y': return Axis.CUBE_Y;
+        case 'Z': return Axis.CUBE_Z;
+    }
+}
 function charToFace(letter) {
     switch (letter.toUpperCase()) {
         case 'U': return Face.UP;        case 'D': return Face.DOWN;
@@ -588,8 +601,10 @@ Cube.prototype._onAnimationEnd = function _onAnimationEnd() {
 Cube.prototype._updateCubiesRotation = function _updateCubiesRotation() {
     var axis = this.anim.current.axis;
     var userCw = this.anim.current.axis > 0;
-    var layer = this.anim.current.layers[0];
-    this._rotateLayer(axis, layer, userCw);
+    var layers = this.anim.current.layers;
+    for (var i = 0; i < layers.length; i++) {
+        this._rotateLayer(axis, layers[i], userCw);
+    }
 };
 
 Cube.prototype._rotateLayer = function _rotateLayer(axis, layer, cw) {
@@ -669,10 +684,6 @@ function makeLine(vec, color) {
 
 // If layers is not provided, all are selected
 Cube.prototype._addLayersToActiveGroup = function _addLayersToActiveGroup(face, layers) {
-    if (!layers || layers.length == 0) {
-        layers = [];
-        for (var i = 0; i < this.size; i++) { layers.push(i); }
-    }
     for (var i = 0; i < layers.length; i++) {
         this._addLayerToActiveGroup(face, layers[i]);
     }
