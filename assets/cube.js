@@ -104,6 +104,9 @@ function Cube(options) {
 Cube.prototype.isAnimating = function isAnimating() { return this.anim.animating; }
 
 Cube.prototype.setAnimationDuration = function setAnimationDuration(duration) {
+    // Don't warn because this may be user input and we don't want
+    // developers to do the same checks as we do.
+    if (isNaN(duration) || !isFinite(duration)) return;
     if (this.isAnimating()) {
         this.anim.duration = duration;
     } else {
