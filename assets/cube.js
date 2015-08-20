@@ -426,9 +426,7 @@ Cube.prototype._alignCubies = function _alignCubies() {
     for (var i = 0; i < this.size; i++) {
         for (var j = 0; j < this.size; j++) {
             for (var k = 0; k < this.size; k++) {
-                if (i + j + k == 0) console.log("cubie (0,0,0) rotation B: ", this.cubies[0][0][0].rotation);
                 roundRotation(this.cubies[i][j][k]);
-                if (i + j + k == 0) console.log("cubie (0,0,0) rotation A: ", this.cubies[0][0][0].rotation);
 
                 this.cubies[i][j][k].position.set(
                     (i-(this.size-1)/2) * this.cubieWidth*(1+this.cubieSpacing),
@@ -444,9 +442,6 @@ function roundRotation(cubie) {
     cubie.rotation.x = intRound(mod(cubie.rotation.x, PI*2), PI/2);
     cubie.rotation.y = intRound(mod(cubie.rotation.y, PI*2), PI/2);
     cubie.rotation.z = intRound(mod(cubie.rotation.z, PI*2), PI/2);
-/*
-    console.log(rot, " > ", cubie.rotation);
-*/
 }
 function mod(a, b) {
     var m = a % b;
