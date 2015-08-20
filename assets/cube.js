@@ -278,9 +278,11 @@ Cube.prototype._init = function _init() {
     this.renderer.domElement.addEventListener('mousedown', function(e) {
         e.target.focus();
     });
-    window.addEventListener('keypress', function(e) {
+    
+    this.keyPressListener = function(e) {
         self._onKeyPress(e);
-    }, false);
+    };
+    window.addEventListener('keypress', this.keyPressListener);
     
    
     
