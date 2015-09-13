@@ -22,7 +22,7 @@ var PI = Math.PI;
 var ORIGIN = new THREE.Vector3(0, 0, 0);
 
 var ROTATION_MATRIX = [
-    [Face.UP,   Face.BACK,   Face.DOWN,   Face.FRONT], // X
+    [Face.UP,   Face.BACK,    Face.DOWN,   Face.FRONT], // X
     [Face.UP,    Face.RIGHT,  Face.DOWN,   Face.LEFT], // Y
     [Face.FRONT, Face.RIGHT,  Face.BACK,   Face.LEFT], // Z
 ];
@@ -157,7 +157,7 @@ Cube.prototype._performRaycast = function _performRaycast(e) {
         // probably yes, since we only ask for intersection with cubies
         if (!elem.object.hasOwnProperty("coords")) { console.log("Intersected with non-cubie"); return; }
         
-        this._onCubieDragStart(elem.object.coords, elem.face.normal);
+        this._onCubieDragStart(elem.object, elem.object.coords, elem.face.normal);
     }                
     // labels
     if (this.showLabels) {
@@ -170,8 +170,10 @@ Cube.prototype._performRaycast = function _performRaycast(e) {
     
 }
 
-Cube.prototype._onCubieDragStart = function _onCubieDragStart(coords, direction) {
-    console.log("onCubieDragStart coords=", coords, " normal=", direction);
+Cube.prototype._onCubieDragStart = function _onCubieDragStart(cubie, coords, direction) {
+    console.log("click pos=("+ coords.x + "," + coords.y + "," + coords.z + "), " +
+                "normal=("   + direction.x + "," + direction.y + "," + direction.z + ")");
+    console.log(cubie);
 }
 
 Cube.prototype.scramble = function scramble(num) {
@@ -262,7 +264,7 @@ Cube.prototype._setupCubies = function() {
         for (var j = 0; j < this.size; j++) {
             this.cubies[i][j] = [];
             for (var k = 0; k < this.size; k++) {
-                var cubie = new THREE.Mesh(cubieGeometry, this._getFaceMaterial(i, j, k, map));
+                var cubie = new Cubie(cubieGeometry, this._getFaceMaterial(i, j, k, map));
                 cubie.origCoords = new THREE.Vector3(i, j, k);
                 cubie.coords = new THREE.Vector3(i, j, k);
                 cubie.up.set(0, 0, 1);
@@ -756,6 +758,7 @@ Cubie.prototype = Object.create(THREE.Mesh.prototype);
 Cubie.prototype.constructor = Cubie;
 
 function Cubie() {
+    THREE.Mesh.apply(this, arguments);
     
 }
 
