@@ -1,4 +1,7 @@
 var Axis = require("./model").Axis;
+var Face = require("./model").Face;
+var THREE = require("./vendor/three");
+
 function swap4V(mat, v1, v2, v3, v4, cw) {
     swap4(mat, v1[0],v1[1],v1[2], v2[0],v2[1],v2[2], v3[0],v3[1],v3[2], v4[0],v4[1],v4[2], cw);
 }
@@ -97,8 +100,73 @@ function deepArrayEquals(a, b) {
 }
 
 
+function faceToChar(face) {
+    return faceToString(face)[0];   
+}
+function faceToString(face) {
+    switch (face) {
+        case Face.FRONT: return 'FRONT'; case Face.BACK:  return 'BACK';
+        case Face.UP:    return 'UP';    case Face.DOWN:  return 'DOWN';
+        case Face.LEFT:  return 'LEFT';  case Face.RIGHT: return 'RIGHT';
+    }
+}
+function getAxisVectorFromFace(face) {
+    var x, y, z;
+    x = y = z = 0;
+    switch (face) {
+        case Face.LEFT:  x = -1; break; case Face.RIGHT: x = 1; break;
+        case Face.FRONT: y = -1; break; case Face.BACK:  y = 1; break;
+        case Face.DOWN:  z = -1; break; case Face.UP:    z = 1; break;
+    }
+    return new THREE.Vector3(x, y, z);
+}
+
+                
+function getFaceIndex(face) {
+    switch (face) {
+        case Face.RIGHT: return 0; case Face.LEFT:  return 1;
+        case Face.BACK:  return 2; case Face.FRONT: return 3;
+        case Face.UP:    return 4; case Face.DOWN:  return 5;
+    }
+}
+
+           
+function charToAxis(letter) {
+    switch (letter.toUpperCase()) {
+        case 'X': return Axis.CUBE_X;
+        case 'Y': return Axis.CUBE_Y;
+        case 'Z': return Axis.CUBE_Z;
+    }
+}
+function charToFace(letter) {
+    switch (letter.toUpperCase()) {
+        case 'U': return Face.UP;        case 'D': return Face.DOWN;
+        case 'L': return Face.LEFT;      case 'R': return Face.RIGHT;
+        case 'B': return Face.BACK;      case 'F': return Face.FRONT;
+    }
+    return null;
+}
+
+function faceToColorString(face) {
+    switch (face) {
+        case Face.RIGHT: return "GREEN";  case Face.LEFT:  return "BLUE";
+        case Face.BACK:  return "ORANGE"; case Face.FRONT: return "RED";
+        case Face.UP:    return "YELLOW"; case Face.DOWN:  return "WHITE";
+    }
+}
+
+
+
+
 module.exports = {
     rotateLayer: rotateLayer,
     deepArrayEquals: deepArrayEquals,
     empty: empty,
+    faceToChar: faceToChar,
+    faceToString: faceToString,
+    getAxisVectorFromFace: getAxisVectorFromFace,
+    getFaceIndex: getFaceIndex,
+    charToFace: charToFace,
+    charToAxis: charToAxis,
+    faceToColorString: faceToColorString,
 };

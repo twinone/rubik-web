@@ -5,6 +5,7 @@ var sceneutils = require("./vendor/sceneutils");
 var util = require("./util");
 require("./vendor/helvetiker.min.js");
 require("./vendor/projector.js");
+var Cubie = require("./cubie").Cubie;
 
 var model = require("./model");
 var Axis = model.Axis;
@@ -174,12 +175,19 @@ Cube.prototype._performRaycast = function _performRaycast(e) {
 }
 
 Cube.prototype._onCubieClick = function _onCubieClick(cubie, coords, direction) {
-    console.log("click pos=("+ coords.x + "," + coords.y + "," + coords.z + "), " +
-                "normal=("   + direction.x + "," + direction.y + "," + direction.z + ")");
+//    console.log("click pos=("+ coords.x + "," + coords.y + "," + coords.z + "), " +
+//                "normal=("   + direction.x + "," + direction.y + "," + direction.z + ")");
 //    console.log(cubie);
     
     var face = direction; // local coords...
-    console.log(faceToString(cubie.getSticker(Face.DOWN)));
+    console.log(
+        (cubie.getSticker(Face.RIGHT) ? "(R: "+util.faceToColorString(cubie.getSticker(Face.RIGHT))+") - " : "") +
+        (cubie.getSticker(Face.LEFT) ? "(L: "+util.faceToColorString(cubie.getSticker(Face.LEFT))+") - " : "") +
+        (cubie.getSticker(Face.BACK) ? "(B: "+util.faceToColorString(cubie.getSticker(Face.BACK))+") - " : "") +
+        (cubie.getSticker(Face.FRONT) ? "(F: "+util.faceToColorString(cubie.getSticker(Face.FRONT))+") - " : "") +
+        (cubie.getSticker(Face.UP) ? "(U: "+util.faceToColorString(cubie.getSticker(Face.UP))+") - " : "") +
+        (cubie.getSticker(Face.DOWN) ? "(D: "+util.faceToColorString(cubie.getSticker(Face.DOWN))+")" : "")  
+               );
 }
 
 Cube.prototype.scramble = function scramble(num) {
@@ -288,7 +296,7 @@ Cube.prototype._setupCubies = function() {
 Cube.prototype.lookAtFace = function lookAtFace(face) {
     var dist = this.cameraDistance;
     dist = Math.sqrt(dist*dist*3);
-    var v = getAxisVectorFromFace(face);
+    var v = util.getAxisVectorFromFace(face);
     v.multiplyScalar(dist);
     this.camera.position.copy(v);
     this.camera.lookAt(ORIGIN);
@@ -395,18 +403,6 @@ Cube.prototype._onResize = function _onResize() {
 };
 
 
-
-function getStickerMaterial(color, map, wireframe) {
-    return new THREE.MeshBasicMaterial({
-        color: color,
-        map: map,
-        wireframe: wireframe,
-        wireframeLinewidth: 2,
-        side: THREE.FrontSide
-    });
-}
-
-
 Cube.prototype._updateLabelOrientation = function _updateLabelOrientation() {
     if (!this.labels) return;
     for (var i = 0; i < this.labels.children.length; i++) {
@@ -427,10 +423,10 @@ Cube.prototype.showLabels = function showLabels() {
     var s = this.width() / 5;
     for (var i = 0; i < faces.length; i++) {
         var face = faces[i];
-        var shape = THREE.FontUtils.generateShapes(faceToChar(face), {size: s});
+        var shape = THREE.FontUtils.generateShapes(util.faceToChar(face), {size: s});
         var geo = new THREE.ShapeGeometry(shape);
         var m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: this.colors.label }));    
-        m.position.copy(getAxisVectorFromFace(face)).multiplyScalar(pos);
+        m.position.copy(util.getAxisVectorFromFace(face)).multiplyScalar(pos);
         
         this.labels.add(m);
     }
@@ -450,7 +446,7 @@ Cube.prototype._alignCubies = function _alignCubies() {
     for (var i = 0; i < this.size; i++) {
         for (var j = 0; j < this.size; j++) {
             for (var k = 0; k < this.size; k++) {
-                roundRotation(this.cubies[i][j][k]);
+                this.cubies[i][j][k].roundRotation();
                 this.cubies[i][j][k].coords.set(i, j, k);
                 this.cubies[i][j][k].position.set(
                     (i-(this.size-1)/2) * this.cubieWidth*(1+this.cubieSpacing),
@@ -461,22 +457,6 @@ Cube.prototype._alignCubies = function _alignCubies() {
     }   
 };
 
-function roundRotation(cubie) {
-    var rot = cubie.rotation;
-    cubie.rotation.x = intRound(mod(cubie.rotation.x, PI*2), PI/2);
-    cubie.rotation.y = intRound(mod(cubie.rotation.y, PI*2), PI/2);
-    cubie.rotation.z = intRound(mod(cubie.rotation.z, PI*2), PI/2);
-}
-function mod(a, b) {
-    var m = a % b;
-    if (m < 0) m += b;
-    return m;
-}
-function intRound(what, to) {
-    var res = what + to/2 - (what+to/2) % to;
-    return res;   
-}
-
 var layerNumber = 0;
 Cube.prototype._onKeyPress = function onKeyPress(e) {
     var key = String.fromCharCode(e.keyCode ? e.keyCode : e.which);
@@ -485,7 +465,7 @@ Cube.prototype._onKeyPress = function onKeyPress(e) {
     }
     
     var cw = key.toUpperCase() === key ^ key.shiftKey;
-    var face = charToFace(key);
+    var face = util.charToFace(key);
     
 //    console.log("ctrl: ", key.ctrlKey, "face: ", face);
     if (key.ctrlKey && face) {
@@ -501,7 +481,7 @@ Cube.prototype._onKeyPress = function onKeyPress(e) {
         layerNumber = 0;
         this._enqueueAnimation(new Animation(cw ? face : -face, [layer]));
     } else {
-        var axis = charToAxis(key);
+        var axis = util.charToAxis(key);
         var layers = []; for (var i = 0; i < this.size; i++) layers.push(i);
         if (axis) {
             this._enqueueAnimation(new Animation(cw ? axis : -axis, layers));
@@ -510,28 +490,12 @@ Cube.prototype._onKeyPress = function onKeyPress(e) {
 };
 
 
-           
-function charToAxis(letter) {
-    switch (letter.toUpperCase()) {
-        case 'X': return Axis.CUBE_X;
-        case 'Y': return Axis.CUBE_Y;
-        case 'Z': return Axis.CUBE_Z;
-    }
-}
-function charToFace(letter) {
-    switch (letter.toUpperCase()) {
-        case 'U': return Face.UP;        case 'D': return Face.DOWN;
-        case 'L': return Face.LEFT;      case 'R': return Face.RIGHT;
-        case 'B': return Face.BACK;      case 'F': return Face.FRONT;
-    }
-    return null;
-}
 
 
 function Animation(axis, layers) {
     this.targetAngle = (PI/2);
     this.angle = 0;
-    this.axisVector = getAxisVectorFromFace(axis);
+    this.axisVector = util.getAxisVectorFromFace(axis);
     this.axisVector.multiplyScalar(-1);
 
     this.axis = axis;
@@ -642,115 +606,9 @@ Cube.prototype._addLayerToActiveGroup = function addLayerToActiveGroup(face, lay
     }
 };
 
-function faceToChar(face) {
-    return faceToString(face)[0];   
-}
-function faceToString(face) {
-    switch (face) {
-        case Face.FRONT: return 'FRONT'; case Face.BACK:  return 'BACK';
-        case Face.UP:    return 'UP';    case Face.DOWN:  return 'DOWN';
-        case Face.LEFT:  return 'LEFT';  case Face.RIGHT: return 'RIGHT';
-    }
-}
-function getAxisVectorFromFace(face) {
-    var x, y, z;
-    x = y = z = 0;
-    switch (face) {
-        case Face.LEFT:  x = -1; break; case Face.RIGHT: x = 1; break;
-        case Face.FRONT: y = -1; break; case Face.BACK:  y = 1; break;
-        case Face.DOWN:  z = -1; break; case Face.UP:    z = 1; break;
-    }
-    return new THREE.Vector3(x, y, z);
-}
-
-
-Cubie.prototype = Object.create(THREE.Mesh.prototype);
-Cubie.prototype.constructor = Cubie;
-
-function Cubie(geo, map, cube, i, j, k) {
-    this.cube = cube;
-    this.origCoords = new THREE.Vector3(i, j, k);
-    this.coords = new THREE.Vector3(i, j, k);
-    
-    var mat = this._getDefaultFaceMaterials(map);
-    THREE.Mesh.apply(this, [geo, mat]);
-}
-
-// Returns the sticker on the specified face of this cubie
-// or null if no sticker on that face
-Cubie.prototype.getSticker = function getSticker(face) {
-    // Cubie is rotated!
-    console.log("Stickers", this.stickers);
-    var sticker = this.stickers[face];
-    console.log("Sticker on face" + faceToString(face) + ":" +sticker);
-    return this.stickers[face];
-}
-                
-function getFaceIndex(face) {
-    switch (face) {
-        case Face.RIGHT: return 0; case Face.LEFT:  return 1;
-        case Face.BACK:  return 2; case Face.FRONT: return 3;
-        case Face.UP:    return 4; case Face.DOWN:  return 5;
-
-    }
-}
-
-// Only valid when all cubies are in their original positions.
-// Order:
-// R L B F U D
-Cubie.prototype.setStickers = function setStickers(stickers) {
-    if (stickers.length > 6) {
-        throw new Error("stickers.length must be at most 6");
-    }
-    this.stickers = stickers;
-}
-
-Cubie.prototype._rotateStickers = function _rotateStickers(axis, degrees) {
-    
-}
-
-Cubie.prototype.setup = function setup(cube, i, j, k) {
-    
-    
-}
-
-
-Cubie.prototype._getDefaultFaceMaterials = function _getDefaultFaceMaterial(map) {
-    var wf = this.cube.wireframe;
-    var d = new THREE.MeshBasicMaterial({
-        color: this.cube.colors.cube,
-        wireframe: wf,
-        wireframeLinewidth: 2,
-        map: map,
-    });
-    var s = this.cube.size -1;
-    
-    var stickers = {};
-    stickers[Face.RIGHT] = this.coords.x == s ? Face.RIGHT : undefined;
-    stickers[Face.LEFT]  = this.coords.x == 0 ? Face.LEFT : undefined;
-    stickers[Face.BACK]  = this.coords.y == s ? Face.BACK : undefined;
-    stickers[Face.FRONT] = this.coords.y == 0 ? Face.FRONT : undefined;
-    stickers[Face.UP]    = this.coords.z == s ? Face.UP : undefined;
-    stickers[Face.DOWN]  = this.coords.z == 0 ? Face.DOWN : undefined;
-    this.setStickers(stickers);
-    
-    var materials = [
-        // R L B F U D
-        stickers[Face.RIGHT] ? getStickerMaterial(this.cube.stickers[stickers[Face.RIGHT]], map, wf) : d,
-        stickers[Face.LEFT]  ? getStickerMaterial(this.cube.stickers[stickers[Face.LEFT]],  map, wf) : d,
-        stickers[Face.BACK]  ? getStickerMaterial(this.cube.stickers[stickers[Face.BACK]],  map, wf) : d,
-        stickers[Face.FRONT] ? getStickerMaterial(this.cube.stickers[stickers[Face.FRONT]], map, wf) : d,
-        stickers[Face.UP]    ? getStickerMaterial(this.cube.stickers[stickers[Face.UP]],    map, wf) : d,
-        stickers[Face.DOWN]  ? getStickerMaterial(this.cube.stickers[stickers[Face.DOWN]],  map, wf) : d,
-    ];
-    return new THREE.MeshFaceMaterial(materials);
-};
-
-
 
 module.exports = {
     defaults: defaults,
     Cube: Cube,
-    Cubie: Cubie,
     Animation: Animation,
 };
