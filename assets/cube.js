@@ -2,6 +2,7 @@ var THREE = require("./vendor/three");
 var orbitcontrols = require("./orbitcontrols");
 var OrbitControls = orbitcontrols.OrbitControls;
 var sceneutils = require("./vendor/sceneutils");
+var util = require("./util");
 require("./vendor/helvetiker.min.js");
 require("./vendor/projector.js");
 
@@ -42,13 +43,11 @@ function Cube(options) {
     this.size = options.size || defaults.size;
     this.cubieWidth = options.cubieWidth || defaults.cubieWidth;
     this.cubieSpacing = options.cubieSpacing || defaults.cubieSpacing;
+    this.cubieSpacing = 0;
     this.labelMargin = options.labelMargin || defaults.labelMargin;
     
-    this.colors = Object.create(defaults.colors);
-    if (options.colors)
-        Object.keys(options.colors).forEach(function(key) {
-            this.colors[key] = options.colors[key];
-        });
+    this.colors = options.colors || defaults.colors;
+    this.stickers = options.stickers || defaults.stickers;
     
     this.cubies = [];
     this.active = null; // init
@@ -70,7 +69,7 @@ function Cube(options) {
     this.anim.current = null;
     this.anim.queue = [];
     this.anim.start = null;
-    this.anim.interpolator = getActualInterpolator(this.anim.interpolator);
+    this.anim.interpolator = interpolation.get(this.anim.interpolator);
     
     this.isInitialized = false;
     
@@ -97,21 +96,24 @@ Cube.prototype.setAnimationDuration = function setAnimationDuration(duration) {
     }
 }
 
-function getActualInterpolator(interpolator) {
-    if (typeof interpolator === "string") {
-        if (!(interpolator in interpolators))
-             throw new Error("Invalid interpolator name given");
-        interpolator = interpolators[interpolator]();
-    }
+Cube.prototype.getState = function getState() {
+    // we have to serialize the current state...
     
-    if (!interpolation.check(interpolator))
-        throw new Error("the interpolator is expected to be a valid function or string");
+}
 
-    return interpolator;
+
+Cube.prototype.setState = function setState() {
+    // apply the serialized state to the cubies
+    // reset them?
+    
+    // reset cubies
+    
+    // apply given state
+    
 }
 
 Cube.prototype.setInterpolator = function setInterpolator(interpolator) {
-    this.anim.interpolator = getActualInterpolator(interpolator);
+    this.anim.interpolator = interpolation.get(interpolator);
 }
 
 Cube.prototype._setupCamera = function _setupCamera() {
@@ -120,6 +122,7 @@ Cube.prototype._setupCamera = function _setupCamera() {
     this.camera.up.set(0, 0, 1);
     this.camera.lookAt(ORIGIN);
 };
+
 Cube.prototype.resetCamera = function resetCamera() {
     this._setupCamera();
 
@@ -157,7 +160,7 @@ Cube.prototype._performRaycast = function _performRaycast(e) {
         // probably yes, since we only ask for intersection with cubies
         if (!elem.object.hasOwnProperty("coords")) { console.log("Intersected with non-cubie"); return; }
         
-        this._onCubieDragStart(elem.object, elem.object.coords, elem.face.normal);
+        this._onCubieClick(elem.object, elem.object.coords, elem.face.normal);
     }                
     // labels
     if (this.showLabels) {
@@ -170,10 +173,13 @@ Cube.prototype._performRaycast = function _performRaycast(e) {
     
 }
 
-Cube.prototype._onCubieDragStart = function _onCubieDragStart(cubie, coords, direction) {
+Cube.prototype._onCubieClick = function _onCubieClick(cubie, coords, direction) {
     console.log("click pos=("+ coords.x + "," + coords.y + "," + coords.z + "), " +
                 "normal=("   + direction.x + "," + direction.y + "," + direction.z + ")");
-    console.log(cubie);
+//    console.log(cubie);
+    
+    var face = direction; // local coords...
+    console.log(faceToString(cubie.getSticker(Face.DOWN)));
 }
 
 Cube.prototype.scramble = function scramble(num) {
@@ -264,17 +270,15 @@ Cube.prototype._setupCubies = function() {
         for (var j = 0; j < this.size; j++) {
             this.cubies[i][j] = [];
             for (var k = 0; k < this.size; k++) {
-                var cubie = new Cubie(cubieGeometry, this._getFaceMaterial(i, j, k, map));
-                cubie.origCoords = new THREE.Vector3(i, j, k);
-                cubie.coords = new THREE.Vector3(i, j, k);
-                cubie.up.set(0, 0, 1);
-                this.cubies[i][j][k] = cubie;
-                this.scene.add(cubie);
+                var cubie = new Cubie(cubieGeometry, map, this, i, j, k);
+                cubie.setup(cubieGeometry, map);
                 cubie.position.set(
                     (i-(this.size-1)/2) * this.cubieWidth*(1+this.cubieSpacing),
                     (j-(this.size-1)/2) * this.cubieWidth*(1+this.cubieSpacing),
                     (k-(this.size-1)/2) * this.cubieWidth*(1+this.cubieSpacing)
                 );
+                this.cubies[i][j][k] = cubie;
+                this.scene.add(cubie);
             }
         }
     }   
@@ -372,8 +376,8 @@ Cube.prototype.destroy = function destroy() {
     this.camera = null;
     this.controls = null;
     this.labels = null;
-    empty(this.active);
-    empty(this.cubies);
+    util.empty(this.active);
+    util.empty(this.cubies);
     this.anim.queue = [];
     this.anim.animating = false;
     
@@ -390,25 +394,7 @@ Cube.prototype._onResize = function _onResize() {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
 };
 
-Cube.prototype._getFaceMaterial = function _getFaceMaterial(x, y, z, map) {
-    var wf = this.wireframe;
-    var d = new THREE.MeshBasicMaterial({
-        color: this.colors.cube,
-        wireframe: wf,
-        wireframeLinewidth: 2
-    });
-    var s = this.size -1;
-    var materials = [
-        // R L B F U D
-        x == s ? getStickerMaterial(this.colors.faceRight, map, wf) : d,
-        x == 0 ? getStickerMaterial(this.colors.faceLeft, map, wf) : d,
-        y == s ? getStickerMaterial(this.colors.faceBack, map, wf) : d,
-        y == 0 ? getStickerMaterial(this.colors.faceFront, map, wf) : d,
-        z == s ? getStickerMaterial(this.colors.faceUp, map, wf) : d,
-        z == 0 ? getStickerMaterial(this.colors.faceDown, map, wf) : d
-    ];
-    return new THREE.MeshFaceMaterial(materials);
-};
+
 
 function getStickerMaterial(color, map, wireframe) {
     return new THREE.MeshBasicMaterial({
@@ -459,10 +445,6 @@ Cube.prototype.hideLabels = function hideLabels() {
     this.shouldShowLabels = false;
 };
 
-// Sets the cubie's position in the scene according to it's position in the matrix
-Cube.prototype._setCubiePosition = function _setCubiePosition(x, y, z) {
-    this.cubies[x][y][z].position.set()
-}
 
 Cube.prototype._alignCubies = function _alignCubies() {
     for (var i = 0; i < this.size; i++) {
@@ -505,9 +487,8 @@ Cube.prototype._onKeyPress = function onKeyPress(e) {
     var cw = key.toUpperCase() === key ^ key.shiftKey;
     var face = charToFace(key);
     
-    console.log("ctrl: ", key.ctrlKey, "face: ", face);
+//    console.log("ctrl: ", key.ctrlKey, "face: ", face);
     if (key.ctrlKey && face) {
-        console.log("control");
         e.preventDefault();
         this.lookAtFace(face);
     }
@@ -562,12 +543,12 @@ function Animation(axis, layers) {
 // the state after the animation would be the same as the current state
 Animation.prototype.cancels = function cancels(anim) {
     return this.axis + anim.axis == 0
-        && deepArrayEquals(this.layers.sort(), anim.layers.sort());
+        && util.deepArrayEquals(this.layers.sort(), anim.layers.sort());
 };
 
 Animation.prototype.equals = function equals(anim) {
     return this.axis == anim.axis
-        && deepArrayEquals(this.layers.sort(), anim.layers.sort());
+        && util.deepArrayEquals(this.layers.sort(), anim.layers.sort());
 };
 
 Cube.prototype._enqueueAnimation = function _enqueueAnimation(anim, optimize) {
@@ -612,6 +593,7 @@ Cube.prototype._onAnimationEnd = function _onAnimationEnd() {
     // Re-add items to the scene
     while (this.active.children.length > 0) {
         var child = this.active.children[0];
+        child._rotateStickers(this.anim.current.axis);
         sceneutils.detach(child, this.active, this.scene);
     }
     this._updateCubiesRotation();
@@ -624,83 +606,10 @@ Cube.prototype._updateCubiesRotation = function _updateCubiesRotation() {
     var userCw = this.anim.current.axis > 0;
     var layers = this.anim.current.layers;
     for (var i = 0; i < layers.length; i++) {
-        this._rotateLayer(axis, layers[i], userCw);
+        util.rotateLayer(this.cubies, axis, layers[i], userCw);
     }
 };
 
-Cube.prototype._rotateLayer = function _rotateLayer(axis, layer, cw) {
-    if (Math.abs(axis) == Axis.X) this._rotateLayerX(layer, cw);
-    if (Math.abs(axis) == Axis.Y) this._rotateLayerY(layer, cw);
-    if (Math.abs(axis) == Axis.Z) this._rotateLayerZ(layer, cw);
-};
-
-Cube.prototype._rotateLayerX = function _rotateLayerX(layer, cw) {
-    var s = this.size;
-    var rings = this.size / 2;
-    for (var i = 0; i < rings; i++) {
-        var ringSize = this.size - i * 2;
-        // offset = i
-        for (var j = 0; j < ringSize-1; j++) {
-            swap4(this.cubies, layer,i,i+j,  layer,i+j,s-1-i,   layer,s-1-i, s-1-i-j,   layer,s-1-i-j,i,  cw);
-        }
-    }
-};
-
-Cube.prototype._rotateLayerY = function _rotateLayerY(layer, cw) {
-    var s = this.size;
-    var rings = this.size / 2;
-    for (var i = 0; i < rings; i++) {
-        var ringSize = this.size - i * 2;
-        // offset = i
-        for (var j = 0; j < ringSize-1; j++) {
-            swap4(this.cubies, i+j,layer,i,   s-i-1,layer,i+j,   s-i-1-j,layer,s-i-1,   i,layer,s-i-1-j,  cw);
-        }
-    }
-};
-
-Cube.prototype._rotateLayerZ = function _rotateLayerZ(layer, cw) {
-    var s = this.size;
-    var rings = this.size / 2;
-    for (var i = 0; i < rings; i++) {
-        var ringSize = this.size - i * 2;
-        // offset = i
-        for (var j = 0; j < ringSize-1; j++) {
-            swap4(this.cubies, i,i+j,layer,  i+j,s-1-i,layer,  s-1-i,s-1-i-j,layer,  s-1-i-j,i,layer,  cw);
-        }
-    }
-};
-
-function swap4V(mat, v1, v2, v3, v4, cw) {
-    swap4(mat, v1[0],v1[1],v1[2], v2[0],v2[1],v2[2], v3[0],v3[1],v3[2], v4[0],v4[1],v4[2], cw);
-}
-
-function swap4(mat, x1,y1,z1, x2,y2,z2, x3,y3,z3, x4,y4,z4, cw) {
-    if (cw) swap4CW(mat, x1,y1,z1, x2,y2,z2, x3,y3,z3, x4,y4,z4);
-    else swap4CCW(mat, x1,y1,z1, x2,y2,z2, x3,y3,z3, x4,y4,z4);
-}
-
-function swap4CCW(mat, x1,y1,z1, x2,y2,z2, x3,y3,z3, x4,y4,z4) {
-    swap4CW(mat, x4,y4,z4, x3,y3,z3, x2,y2,z2, x1,y1,z1);
-}
-
-function swap4CW(mat, x1,y1,z1, x2,y2,z2, x3,y3,z3, x4,y4,z4) {
-    tmp = mat[x4][y4][z4];
-    mat[x4][y4][z4] = mat[x3][y3][z3];
-    mat[x3][y3][z3] = mat[x2][y2][z2];
-    mat[x2][y2][z2] = mat[x1][y1][z1];
-    mat[x1][y1][z1] = tmp;
-}
-
-function makeLine(vec, color) {
-    var mat = new THREE.LineBasicMaterial({color:color, linewidth:3});
-    var geo = new THREE.Geometry();
-    geo.vertices.push(ORIGIN);
-    geo.vertices.push(vec);
-
-    var line = new THREE.Line(geo, mat);
-    scene.add(line);
-    return line;
-}
 
 
 // If layers is not provided, all are selected
@@ -747,20 +656,96 @@ function getAxisVectorFromFace(face) {
     var x, y, z;
     x = y = z = 0;
     switch (face) {
-        case Face.LEFT:  x = -1; break; case Face.RIGHT:x = 1; break;
-        case Face.FRONT: y = -1; break; case Face.BACK: y = 1; break;
-        case Face.DOWN:  z = -1; break; case Face.UP:   z = 1; break;
+        case Face.LEFT:  x = -1; break; case Face.RIGHT: x = 1; break;
+        case Face.FRONT: y = -1; break; case Face.BACK:  y = 1; break;
+        case Face.DOWN:  z = -1; break; case Face.UP:    z = 1; break;
     }
     return new THREE.Vector3(x, y, z);
 }
 
+
 Cubie.prototype = Object.create(THREE.Mesh.prototype);
 Cubie.prototype.constructor = Cubie;
 
-function Cubie() {
-    THREE.Mesh.apply(this, arguments);
+function Cubie(geo, map, cube, i, j, k) {
+    this.cube = cube;
+    this.origCoords = new THREE.Vector3(i, j, k);
+    this.coords = new THREE.Vector3(i, j, k);
+    
+    var mat = this._getDefaultFaceMaterials(map);
+    THREE.Mesh.apply(this, [geo, mat]);
+}
+
+// Returns the sticker on the specified face of this cubie
+// or null if no sticker on that face
+Cubie.prototype.getSticker = function getSticker(face) {
+    // Cubie is rotated!
+    console.log("Stickers", this.stickers);
+    var sticker = this.stickers[face];
+    console.log("Sticker on face" + faceToString(face) + ":" +sticker);
+    return this.stickers[face];
+}
+                
+function getFaceIndex(face) {
+    switch (face) {
+        case Face.RIGHT: return 0; case Face.LEFT:  return 1;
+        case Face.BACK:  return 2; case Face.FRONT: return 3;
+        case Face.UP:    return 4; case Face.DOWN:  return 5;
+
+    }
+}
+
+// Only valid when all cubies are in their original positions.
+// Order:
+// R L B F U D
+Cubie.prototype.setStickers = function setStickers(stickers) {
+    if (stickers.length > 6) {
+        throw new Error("stickers.length must be at most 6");
+    }
+    this.stickers = stickers;
+}
+
+Cubie.prototype._rotateStickers = function _rotateStickers(axis, degrees) {
     
 }
+
+Cubie.prototype.setup = function setup(cube, i, j, k) {
+    
+    
+}
+
+
+Cubie.prototype._getDefaultFaceMaterials = function _getDefaultFaceMaterial(map) {
+    var wf = this.cube.wireframe;
+    var d = new THREE.MeshBasicMaterial({
+        color: this.cube.colors.cube,
+        wireframe: wf,
+        wireframeLinewidth: 2,
+        map: map,
+    });
+    var s = this.cube.size -1;
+    
+    var stickers = {};
+    stickers[Face.RIGHT] = this.coords.x == s ? Face.RIGHT : undefined;
+    stickers[Face.LEFT]  = this.coords.x == 0 ? Face.LEFT : undefined;
+    stickers[Face.BACK]  = this.coords.y == s ? Face.BACK : undefined;
+    stickers[Face.FRONT] = this.coords.y == 0 ? Face.FRONT : undefined;
+    stickers[Face.UP]    = this.coords.z == s ? Face.UP : undefined;
+    stickers[Face.DOWN]  = this.coords.z == 0 ? Face.DOWN : undefined;
+    this.setStickers(stickers);
+    
+    var materials = [
+        // R L B F U D
+        stickers[Face.RIGHT] ? getStickerMaterial(this.cube.stickers[stickers[Face.RIGHT]], map, wf) : d,
+        stickers[Face.LEFT]  ? getStickerMaterial(this.cube.stickers[stickers[Face.LEFT]],  map, wf) : d,
+        stickers[Face.BACK]  ? getStickerMaterial(this.cube.stickers[stickers[Face.BACK]],  map, wf) : d,
+        stickers[Face.FRONT] ? getStickerMaterial(this.cube.stickers[stickers[Face.FRONT]], map, wf) : d,
+        stickers[Face.UP]    ? getStickerMaterial(this.cube.stickers[stickers[Face.UP]],    map, wf) : d,
+        stickers[Face.DOWN]  ? getStickerMaterial(this.cube.stickers[stickers[Face.DOWN]],  map, wf) : d,
+    ];
+    return new THREE.MeshFaceMaterial(materials);
+};
+
 
 
 module.exports = {
@@ -769,32 +754,3 @@ module.exports = {
     Cubie: Cubie,
     Animation: Animation,
 };
-
-
-function empty(elem) {
-    while (elem.lastChild) elem.removeChild(elem.lastChild);
-}
-
-function deepArrayEquals(a, b) {
-    // if any array is a falsy value, return
-    if (!a || !b)
-        return false;
-
-    // compare lengths - can save a lot of time 
-    if (a.length != b.length)
-        return false;
-
-    for (var i = 0, l = a.length; i < l; i++) {
-        // Check if we have nested arrays
-        if (a[i] instanceof Array && b[i] instanceof Array) {
-            // recurse into the nested arrays
-            if (!deepArrayEquals(a[i], b[i]))
-                return false;
-        }
-        else if (a[i] != b[i]) {
-            // Warning - two different object instances will never be equal: {x:20} != {x:20}
-            return false;
-        }
-    }
-    return true;
-}

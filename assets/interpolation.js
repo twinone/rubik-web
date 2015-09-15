@@ -69,7 +69,20 @@ interpolators.bounce = function bounce() {
     };
 };
 
+function get(interpolator) {
+    if (typeof interpolator === "string") {
+        if (!(interpolator in interpolators))
+             throw new Error("Invalid interpolator name given");
+        interpolator = interpolators[interpolator]();
+    }
+    
+    if (!check(interpolator))
+        throw new Error("the interpolator is expected to be a valid function or string");
+
+    return interpolator;
+}
+
 module.exports = {
-    check: check,
+    get: get,
     interpolators: interpolators,
 };
