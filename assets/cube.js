@@ -385,7 +385,7 @@ Cube.prototype.destroy = function destroy() {
     this.controls = null;
     this.labels = null;
     util.empty(this.active);
-    util.empty(this.cubies);
+    this.cubies = [];
     this.anim.queue = [];
     this.anim.animating = false;
     
