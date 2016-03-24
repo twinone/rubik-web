@@ -15,11 +15,6 @@ var Axis = {
     CUBE_Z: Face.FRONT,
 };
 
-
-function isPermutation() {
-    //TODO
-}
-
 function getFaceAxis(face) {
     if (face == LEFT  || face == RIGHT) return Axis.X;
     if (face == FRONT || face == BACK)  return Axis.Y;
@@ -32,12 +27,21 @@ function axisToIndex(axis) {
     if (axis == Axis.Z) return 2;
 }
 
+function State(state) {
+    if (typeof(state) !== "string") throw new Error("State should be a string!");
+    if (state.length % 6 != 0) throw new Error("State's length must be a multiple of 6");
+    var squaredSize = state.length / 6;
+    size = Math.sqrt(squaredSize);
+    if (this.size * this.size != squaredSize) throw new Error("Faces should be square");
+    // TODO check if state is valid by checking permutations, etc?
+    this.state = state;
+}
+
 
 module.exports = {
     Axis: Axis,
     Face: Face,
     faces: faces,
-    isPermutation: isPermutation,
     getFaceAxis: getFaceAxis,
     axisToIndex: axisToIndex,
 };

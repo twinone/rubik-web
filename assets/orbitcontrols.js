@@ -524,7 +524,7 @@ function OrbitControls( object, domElement ) {
 
 	}
 
-	function onKeyDown( event ) {
+function onKeyDown( event ) {
 
 		if ( scope.enabled === false || scope.noKeys === true || scope.noRotate === true ) return;
         var angle = Math.PI/4;
@@ -697,7 +697,7 @@ function OrbitControls( object, domElement ) {
 	this.domElement.addEventListener( 'touchend', touchend, false );
 	this.domElement.addEventListener( 'touchmove', touchmove, false );
 
-	window.addEventListener( 'keydown', onKeyDown, false );
+	this.domElement.addEventListener( 'keydown', onKeyDown, false );
 
 	// force an update at start
 	this.update();

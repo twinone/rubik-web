@@ -40,47 +40,46 @@ function Cube(options) {
     this.renderer = new THREE.WebGLRenderer({ canvas: canvas });
 
     this.animationFrameId = null;
-    
+
     this.size = options.size || defaults.size;
     this.cubieWidth = options.cubieWidth || defaults.cubieWidth;
     this.cubieSpacing = options.cubieSpacing || defaults.cubieSpacing;
     this.cubieSpacing = 0;
     this.labelMargin = options.labelMargin || defaults.labelMargin;
-    
+
     this.colors = options.colors || defaults.colors;
     this.stickers = options.stickers || defaults.stickers;
-    
+
     this.cubies = [];
     this.active = null; // init
     this.labels = null;
-    this.axis = new THREE.Object3D();
-    
+
     this.shouldShowLabels = (options.showLabels != undefined) ? options.showLabels : defaults.showLabels;
     this.shouldOptimizeQueue = true;
-    
+
     this.anim = Object.create(defaults.animation);
 
     if (options.animation)
         Object.keys(options.animation).forEach(function(key) {
             this.anim[key] = options.animation[key];
         });
-    
+
 
     this.anim.animating = false;
     this.anim.current = null;
     this.anim.queue = [];
     this.anim.start = null;
     this.anim.interpolator = interpolation.get(this.anim.interpolator);
-    
+
     this.isInitialized = false;
-    
+
     this.mouse = {
         x: 0,
         y: 0
     }
-    
+
     this.wireframe = defaults.wireframe;
-    
+
     this.init();
 };
 
@@ -97,20 +96,31 @@ Cube.prototype.setAnimationDuration = function setAnimationDuration(duration) {
     }
 }
 
+/*
+If we unfold the cube in the following layout:
+ U
+LFRB
+ D
+A State is the stickers of each face in order ULFRBD in reading order (ltr)
+The solved state would be:
+uuuuuullllllffffffrrrrrrbbbbbbdddddd
+
+*/
 Cube.prototype.getState = function getState() {
     // we have to serialize the current state...
-    
+    var faces = "";
+//    for (this.cubies[][][])
 }
 
 
-Cube.prototype.setState = function setState() {
+Cube.prototype.setState = function setState(state) {
     // apply the serialized state to the cubies
     // reset them?
-    
+
     // reset cubies
-    
+
     // apply given state
-    
+
 }
 
 Cube.prototype.setInterpolator = function setInterpolator(interpolator) {
@@ -132,17 +142,17 @@ Cube.prototype.resetCamera = function resetCamera() {
 
 Cube.prototype._performRaycast = function _performRaycast(e) {
     if (this.anim.animating) { console.log("not raycasting while animating!"); return; }
-    
+
     // update the mouse position
     // update the mouse variable
 	this.mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
 	this.mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-    
+
     // create a Ray with origin at the mouse position
 	// and direction into the scene (camera direction)
 	var vector = new THREE.Vector3(this.mouse.x, this.mouse.y, 1);
     vector.unproject(this.camera);
-    
+
 	var ray = new THREE.Raycaster(this.camera.position,
                                   vector.sub(this.camera.position).normalize());
 
@@ -160,25 +170,25 @@ Cube.prototype._performRaycast = function _performRaycast(e) {
         // determine if we hit a cubie
         // probably yes, since we only ask for intersection with cubies
         if (!elem.object.hasOwnProperty("coords")) { console.log("Intersected with non-cubie"); return; }
-        
+
         this._onCubieClick(elem.object, elem.object.coords, elem.face.normal);
-    }                
+    }
     // labels
     if (this.showLabels) {
         // intersects = ray.intersectObjects(this.labels.children);
-            
+
         // TODO put labels in a container
         // Clicking only the letter is very difficult
     }
-    
-    
+
+
 }
 
 Cube.prototype._onCubieClick = function _onCubieClick(cubie, coords, direction) {
 //    console.log("click pos=("+ coords.x + "," + coords.y + "," + coords.z + "), " +
 //                "normal=("   + direction.x + "," + direction.y + "," + direction.z + ")");
 //    console.log(cubie);
-    
+
     var face = direction; // local coords...
     console.log(
         (cubie.getSticker(Face.RIGHT) ? "(R: "+util.faceToColorString(cubie.getSticker(Face.RIGHT))+") - " : "") +
@@ -186,14 +196,14 @@ Cube.prototype._onCubieClick = function _onCubieClick(cubie, coords, direction) 
         (cubie.getSticker(Face.BACK) ? "(B: "+util.faceToColorString(cubie.getSticker(Face.BACK))+") - " : "") +
         (cubie.getSticker(Face.FRONT) ? "(F: "+util.faceToColorString(cubie.getSticker(Face.FRONT))+") - " : "") +
         (cubie.getSticker(Face.UP) ? "(U: "+util.faceToColorString(cubie.getSticker(Face.UP))+") - " : "") +
-        (cubie.getSticker(Face.DOWN) ? "(D: "+util.faceToColorString(cubie.getSticker(Face.DOWN))+")" : "")  
+        (cubie.getSticker(Face.DOWN) ? "(D: "+util.faceToColorString(cubie.getSticker(Face.DOWN))+")" : "")
                );
 }
 
 Cube.prototype.scramble = function scramble(num) {
     var turns = num || (this.size -1) * 10;
     var expectedLength = this.anim.queue.length + turns;
-    
+
     while (this.anim.queue.length < expectedLength) {
         var face = randFace();
         var layer = randInt(0, this.size-1);
@@ -218,7 +228,7 @@ Cube.prototype._optimizeQueue = function _optimizeQueue() {
             }
         }
     }
-    
+
     // Remove all 4 consecutive turns
     found = true; // enter the loop
     while (found) {
@@ -233,7 +243,7 @@ Cube.prototype._optimizeQueue = function _optimizeQueue() {
             }
         }
     }
-    
+
     this.anim.queue = q;
     return count - q.length;
 };
@@ -265,14 +275,14 @@ Cube.prototype.width = function() {
 
 Cube.prototype._setupCubies = function() {
     var cubieGeometry = new THREE.BoxGeometry(this.cubieWidth, this.cubieWidth, this.cubieWidth);
-    
+
     var image = document.createElement('img');
     var map = new THREE.Texture(image);
     image.onload = function()  {
         map.needsUpdate = true;
     };
     image.src =  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAAVklEQVRo3u3RsQ0AIAwDwYT9dzYlTIAUcd+l8ylV0t/1fSSZMbrP7DX9AwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACSXrQBS9IDcNBhO+QAAAAASUVORK5CYII=';
-    
+
     for (var i = 0; i < this.size; i++) {
         this.cubies[i] = [];
         for (var j = 0; j < this.size; j++) {
@@ -289,7 +299,7 @@ Cube.prototype._setupCubies = function() {
                 this.scene.add(cubie);
             }
         }
-    }   
+    }
 };
 
 
@@ -307,45 +317,47 @@ Cube.prototype.init = function init() {
 
 Cube.prototype._init = function _init() {
     var self = this;
-    
+
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000);
     this.cameraDistance = this.cubieWidth* (1+this.cubieSpacing) * this.size/2 * 4;
 
     this.projector = new THREE.Projector();
-   
+
     this.resizeListener = function(e) {
-        self._onResize(e);   
+        self._onResize(e);
     }
     window.addEventListener('resize', this.resizeListener);
-    
+
     this.renderer.setClearColor(this.colors.background);
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    
+
     this.active = new THREE.Object3D();
     this.scene.add(this.active);
-    
+
     this._setupCubies();
-    
+
     if (this.shouldShowLabels) {
         this.showLabels();
     }
-    
+
     this._setupCamera();
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    
+
     this.onMouseDownListener = function onMouseDownListener(e) {
         self._performRaycast(e);
     }
     this.renderer.domElement.addEventListener('mousedown', this.onMouseDownListener);
-    
+
     this.keyPressListener = function(e) {
         self._onKeyPress(e);
     };
-    window.addEventListener('keypress', this.keyPressListener);
-    
-   
-    
+    //var elm = document.getElementById("canvas-container");
+    var elm = this.renderer.domElement;
+    elm.addEventListener('keypress', this.keyPressListener);
+
+
+
     function render () {
         self.dt = self.clock.getDelta();
 
@@ -360,12 +372,12 @@ Cube.prototype._init = function _init() {
                 self.anim.newDuration = undefined;
             }
             if (self.anim.queue.length != 0) {
-                self.anim.currDuration = self.anim.duration * 
+                self.anim.currDuration = self.anim.duration *
                     Math.max(0.3, Math.pow(0.9, self.anim.queue.length/2));
                 self._startAnimation(self.anim.queue.shift());
             }
         }
-        
+
         self.renderer.render(self.scene, self.camera);
         self.animationFrameId = requestAnimationFrame(render);
     }
@@ -388,7 +400,7 @@ Cube.prototype.destroy = function destroy() {
     this.cubies = [];
     this.anim.queue = [];
     this.anim.animating = false;
-    
+
     this.renderer.domElement.removeEventListener('mousedown', this.onMouseDownListener);
     window.removeEventListener('keypress', this.keyPressListener);
     window.removeEventListener('resize', this.resizeListener);
@@ -425,9 +437,9 @@ Cube.prototype.showLabels = function showLabels() {
         var face = faces[i];
         var shape = THREE.FontUtils.generateShapes(util.faceToChar(face), {size: s});
         var geo = new THREE.ShapeGeometry(shape);
-        var m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: this.colors.label }));    
+        var m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: this.colors.label }));
         m.position.copy(util.getAxisVectorFromFace(face)).multiplyScalar(pos);
-        
+
         this.labels.add(m);
     }
     this.scene.add(this.labels);
@@ -454,7 +466,7 @@ Cube.prototype._alignCubies = function _alignCubies() {
                     (k-(this.size-1)/2) * this.cubieWidth*(1+this.cubieSpacing));
             }
         }
-    }   
+    }
 };
 
 var layerNumber = 0;
@@ -463,20 +475,20 @@ Cube.prototype._onKeyPress = function onKeyPress(e) {
     if (key >= 0 && key <= 9) {
         layerNumber = Math.min(this.size-1,key);
     }
-    
+
     var cw = key.toUpperCase() === key ^ key.shiftKey;
     var face = util.charToFace(key);
-    
+
 //    console.log("ctrl: ", key.ctrlKey, "face: ", face);
     if (key.ctrlKey && face) {
         e.preventDefault();
         this.lookAtFace(face);
     }
-    
-    var layer = (face == Face.FRONT || face == Face.LEFT || face == Face.DOWN) 
-        ? layerNumber 
+
+    var layer = (face == Face.FRONT || face == Face.LEFT || face == Face.DOWN)
+        ? layerNumber
         : this.size -1 - layerNumber;
-    
+
     if (face) {
         layerNumber = 0;
         this._enqueueAnimation(new Animation(cw ? face : -face, [layer]));
@@ -489,7 +501,32 @@ Cube.prototype._onKeyPress = function onKeyPress(e) {
     }
 };
 
+Cube.prototype.algorithm = function algorithm(algorithm) {
+  var moves = algorithm.split(" ");
+  for (var i = 0; i < moves.length; i++) {
+    var move = moves[i];
+    var p = 0;
+    // process number
+    // TODO
+    // process letter
+    var c = move.charAt(p++);
+    var face = util.charToFace(c);
+    if (!face) throw "Invalid move: " + c;
+    var cw = c == c.toUpperCase(); // uppercase letter is clockwise
+    // process prime (inverts turn direction)
+    c = move.charAt(p++);
+    if (c == "'") {
+      cw = !cw;
+    }
+    console.log("Executing move: ", move, face);
+    var layer = (face == Face.FRONT || face == Face.LEFT || face == Face.DOWN)
+        ? layerNumber
+        : this.size -1 - layerNumber;
+    var layers = [layer];
 
+    this._enqueueAnimation(new Animation(cw ? face: -face, layers), false);
+  }
+}
 
 
 function Animation(axis, layers) {
@@ -532,7 +569,7 @@ Cube.prototype._startAnimation = function _startAnimation(animation) {
 };
 
 Cube.prototype._updateAnimation = function _updateAnimation() {
-    
+
     var dt = (this.clock.getElapsedTime() - this.anim.start);
     var dur = this.anim.currDuration / 1000;
     var pct = dt / dur;
@@ -541,19 +578,19 @@ Cube.prototype._updateAnimation = function _updateAnimation() {
         this.anim.animating = false;
     }
     pct = this.anim.interpolator(pct);
-    
+
     var angle = (PI/2) * pct;
 
     this.active.rotation.x = angle * this.anim.current.axisVector.x;
     this.active.rotation.y = angle * this.anim.current.axisVector.y;
     this.active.rotation.z = angle * this.anim.current.axisVector.z;
-    
+
     if (!this.anim.animating) this._onAnimationEnd();
 };
 
 Cube.prototype._onAnimationEnd = function _onAnimationEnd() {
     this.active.updateMatrixWorld();
-    
+
     // Re-add items to the scene
     while (this.active.children.length > 0) {
         var child = this.active.children[0];

@@ -77,8 +77,12 @@ addListener('reset-camera-button', 'click', function() {
     cube.resetCamera();
 });
 
-addListener('canvas-container', 'click', function() {
+addListener('canvas', 'click', function() {
     console.log("this:",this);
-    document.location.hash = '#canvas-container';
+    document.location.hash = '#canvas';
     this.focus();
+});
+
+addListener('run-algorithm', 'click', function() {
+    cube.algorithm(document.getElementById('algorithm').value);
 });
