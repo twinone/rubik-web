@@ -103,4 +103,9 @@ addListener('copy-state', 'click', function() {
 });
 
 addListener('test-button', 'click', function() {
+  var state = new State(cube.getState());
+  console.log(state.state.join(""));
+  state.rotate(Face.DOWN, true);
+  console.log(state.state.join(""));
+
 });

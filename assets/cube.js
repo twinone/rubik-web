@@ -438,7 +438,7 @@ Cube.prototype.destroy = function destroy() {
     this.anim.animating = false;
 
     this.renderer.domElement.removeEventListener('mousedown', this.onMouseDownListener);
-    window.removeEventListener('keypress', this.keyPressListener);
+    this.renderer.domElement.removeEventListener('keypress', this.keyPressListener);
     window.removeEventListener('resize', this.resizeListener);
 };
 

@@ -16,10 +16,6 @@ function swap4CCW(mat, x1,y1,z1, x2,y2,z2, x3,y3,z3, x4,y4,z4) {
 }
 
 function swap4CW(mat, x1,y1,z1, x2,y2,z2, x3,y3,z3, x4,y4,z4) {
-//    console.log("Swapping ("+x1+","+y1+","+z1+"),"+
-//                "("+x2+","+y2+","+z2+"),"+
-//                "("+x3+","+y3+","+z3+"),"+
-//                "("+x4+","+y4+","+z4+")");
     tmp = mat[x4][y4][z4];
     mat[x4][y4][z4] = mat[x3][y3][z3];
     mat[x3][y3][z3] = mat[x2][y2][z2];
