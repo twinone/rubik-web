@@ -4,6 +4,8 @@ var defaults = require("./cube").defaults;
 var interpolation = require("./interpolation");
 
 var Face = require("./model").Face;
+var State = require("./state").State;
+
 
 var sel = document.getElementById('select-interpolator');
 var ips = Object.keys(interpolation.interpolators);
@@ -31,7 +33,8 @@ function getParameterByName(name) {
 
 function updateUI() {
   document.getElementById('size').textContent = cube.size;
-  document.getElementById('state').innerHTML = cube.getState(true);
+  document.getElementById('fancy-state').innerHTML = cube.getState(true);
+  document.getElementById('state').innerHTML = cube.getState(false);
 }
 
 var size = getParameterByName("size");
@@ -76,6 +79,10 @@ addListener('decrement-size-button', 'click', function() {
 addListener('scramble-button', 'click', function() {
     cube.scramble();
 });
+addListener('solve-button', 'click', function() {
+    console.log(cube.getSolution());
+});
+
 addListener('toggle-labels-button', 'click', function() {
     cube.toggleLabels();
 });
@@ -84,11 +91,19 @@ addListener('reset-camera-button', 'click', function() {
 });
 
 addListener('canvas', 'click', function() {
-    console.log("this:",this);
     document.location.hash = '#canvas';
     this.focus();
 });
 
 addListener('run-algorithm', 'click', function() {
     cube.algorithm(document.getElementById('algorithm').value);
+});
+
+addListener('change-state', 'click', function() {
+  console.log(document.getElementById("state").textContent);
+    var state = State();
+});
+
+addListener('test-button', 'click', function() {
+  cube.cubies[0][0][0].setSticker(Face.DOWN, Face.UP);
 });

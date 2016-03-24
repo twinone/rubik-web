@@ -7,6 +7,7 @@ require("./vendor/helvetiker.min.js");
 require("./vendor/projector.js");
 var Cubie = require("./cubie").Cubie;
 
+var solver = require("./solver");
 var model = require("./model");
 var Axis = model.Axis;
 var Face = model.Face;
@@ -235,6 +236,10 @@ Cube.prototype.scramble = function scramble(num) {
     }
 };
 
+Cube.prototype.getSolution = function getSolution() {
+    return solver.Solve(this.getState());
+}
+
 Cube.prototype._optimizeQueue = function _optimizeQueue() {
     var q = this.anim.queue;
     var count = q.length;
@@ -328,7 +333,7 @@ Cube.prototype._setupCubies = function() {
 Cube.prototype.lookAtFace = function lookAtFace(face) {
     var dist = this.cameraDistance;
     dist = Math.sqrt(dist*dist*3);
-    var v = util.getAxisVectorFromFace(face);
+    var v = util.faceToAxis(face);
     v.multiplyScalar(dist);
     this.camera.position.copy(v);
     this.camera.lookAt(ORIGIN);
@@ -460,7 +465,7 @@ Cube.prototype.showLabels = function showLabels() {
         var shape = THREE.FontUtils.generateShapes(util.faceToChar(face), {size: s});
         var geo = new THREE.ShapeGeometry(shape);
         var m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: this.colors.label }));
-        m.position.copy(util.getAxisVectorFromFace(face)).multiplyScalar(pos);
+        m.position.copy(util.faceToAxis(face)).multiplyScalar(pos);
 
         this.labels.add(m);
     }
@@ -553,7 +558,7 @@ Cube.prototype.algorithm = function algorithm(algorithm) {
 function Animation(axis, layers) {
     this.targetAngle = (PI/2);
     this.angle = 0;
-    this.axisVector = util.getAxisVectorFromFace(axis);
+    this.axisVector = util.faceToAxis(axis);
     this.axisVector.multiplyScalar(-1);
 
     this.axis = axis;

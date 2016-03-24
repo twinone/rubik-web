@@ -110,7 +110,8 @@ function faceToString(face) {
         case Face.LEFT:  return 'LEFT';  case Face.RIGHT: return 'RIGHT';
     }
 }
-function getAxisVectorFromFace(face) {
+
+function faceToAxis(face) {
     var x, y, z;
     x = y = z = 0;
     switch (face) {
@@ -119,6 +120,15 @@ function getAxisVectorFromFace(face) {
         case Face.DOWN:  z = -1; break; case Face.UP:    z = 1; break;
     }
     return new THREE.Vector3(x, y, z);
+}
+
+function axisToFace(axis) {
+  if (axis.x == -1) return Face.LEFT;
+  if (axis.x == 1) return Face.RIGHT;
+  if (axis.y == -1) return Face.FRONT;
+  if (axis.y == 1) return Face.BACK;
+  if (axis.z == -1) return Face.DOWN;
+  if (axis.z == 1) return Face.UP;
 }
 
 
@@ -163,9 +173,10 @@ module.exports = {
     empty: empty,
     faceToChar: faceToChar,
     faceToString: faceToString,
-    getAxisVectorFromFace: getAxisVectorFromFace,
     getFaceIndex: getFaceIndex,
     charToFace: charToFace,
     charToAxis: charToAxis,
     faceToColorString: faceToColorString,
+    axisToFace: axisToFace,
+    faceToAxis: faceToAxis,
 };
