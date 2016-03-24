@@ -6,7 +6,7 @@ stickers[Face.LEFT] =  0x0051BA;
 stickers[Face.BACK] =  0xFF5800;
 stickers[Face.FRONT] = 0xC41E3A;
 stickers[Face.UP] =    0xFFD500;
-stickers[Face.DOWN] =  0xFFFFFF;    
+stickers[Face.DOWN] =  0xFFFFFF;
 
 var prod_defaults = {
     size: 3,
@@ -25,13 +25,13 @@ var prod_defaults = {
         background: 0xFFFFFF,
         cube: 0x000000,
     },
-    
+
     wireframe: false,
-    
+
     animation: {
         duration: 300, //ms
         interpolator: "linear" //name or function
-    }
+    },
 };
 
 var dbg_defaults = {
@@ -40,7 +40,7 @@ var dbg_defaults = {
     cubieSpacing: 0, // in terms of cubieWidth (now only for debugging)
     showLabels: true,
     labelMargin: 0.5, // in terms of cubieWidth * cubieSize
-    
+
     colors: {
         faceRight: 0x009E60,
         faceLeft: 0x0051BA,
@@ -55,13 +55,13 @@ var dbg_defaults = {
         background: 0xFFFFFF,
         cube: 0x000000,
     },
-    
+
     wireframe: false,
-    
+
     animation: {
         duration: 300, //ms
         interpolator: "linear" //name or function
-    }
+    },
 };
 
 module.exports = { defaults: prod_defaults };

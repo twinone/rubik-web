@@ -80,7 +80,7 @@ function deepArrayEquals(a, b) {
     if (!a || !b)
         return false;
 
-    // compare lengths - can save a lot of time 
+    // compare lengths - can save a lot of time
     if (a.length != b.length)
         return false;
 
@@ -101,7 +101,7 @@ function deepArrayEquals(a, b) {
 
 
 function faceToChar(face) {
-    return faceToString(face)[0];   
+    return faceToString(face)[0];
 }
 function faceToString(face) {
     switch (face) {
@@ -121,7 +121,7 @@ function getAxisVectorFromFace(face) {
     return new THREE.Vector3(x, y, z);
 }
 
-                
+
 function getFaceIndex(face) {
     switch (face) {
         case Face.RIGHT: return 0; case Face.LEFT:  return 1;
@@ -130,7 +130,7 @@ function getFaceIndex(face) {
     }
 }
 
-           
+
 function charToAxis(letter) {
     switch (letter.toUpperCase()) {
         case 'X': return Axis.CUBE_X;
@@ -154,7 +154,6 @@ function faceToColorString(face) {
         case Face.UP:    return "YELLOW"; case Face.DOWN:  return "WHITE";
     }
 }
-
 
 
 

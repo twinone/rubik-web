@@ -70,6 +70,7 @@ function Cube(options) {
     this.anim.queue = [];
     this.anim.start = null;
     this.anim.interpolator = interpolation.get(this.anim.interpolator);
+    this.moveCompleteListener = options.moveCompleteListener || defaults.moveCompleteListener;
 
     this.isInitialized = false;
 
@@ -96,6 +97,7 @@ Cube.prototype.setAnimationDuration = function setAnimationDuration(duration) {
     }
 }
 
+
 /*
 If we unfold the cube in the following layout:
  U
@@ -105,11 +107,31 @@ A State is the stickers of each face in order ULFRBD in reading order (ltr)
 The solved state would be:
 uuuuuullllllffffffrrrrrrbbbbbbdddddd
 
+Where u means the "up" color.
+
 */
-Cube.prototype.getState = function getState() {
-    // we have to serialize the current state...
-    var faces = "";
-//    for (this.cubies[][][])
+Cube.prototype.getState = function getState(fancy = false) {
+  var s = this.size;
+  var faces = "";
+  if (fancy) faces += "UP: ";
+  for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
+      faces += util.faceToChar(this.cubies[j][s-1-i][s-1].getSticker(Face.UP));
+  if (fancy) faces += "<br>LEFT: ";
+  for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
+      faces += util.faceToChar(this.cubies[0][s-1-j][s-1-i].getSticker(Face.LEFT));
+  if (fancy) faces += "<br>FRONT: ";
+  for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
+      faces += util.faceToChar(this.cubies[j][0][s-1-i].getSticker(Face.FRONT));
+  if (fancy) faces += "<br>RIGHT: ";
+  for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
+      faces += util.faceToChar(this.cubies[s-1][j][s-1-i].getSticker(Face.RIGHT));
+  if (fancy) faces += "<br>BACK: ";
+  for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
+      faces += util.faceToChar(this.cubies[s-1-j][s-1][s-1-i].getSticker(Face.BACK));
+  if (fancy) faces += "<br>DOWN: ";
+  for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
+      faces += util.faceToChar(this.cubies[j][i][0].getSticker(Face.DOWN));
+  return faces;
 }
 
 
@@ -518,7 +540,6 @@ Cube.prototype.algorithm = function algorithm(algorithm) {
     if (c == "'") {
       cw = !cw;
     }
-    console.log("Executing move: ", move, face);
     var layer = (face == Face.FRONT || face == Face.LEFT || face == Face.DOWN)
         ? layerNumber
         : this.size -1 - layerNumber;
@@ -600,6 +621,8 @@ Cube.prototype._onAnimationEnd = function _onAnimationEnd() {
     this._updateCubiesRotation();
     this._alignCubies();
     this.anim.animating = false;
+
+    if (this.moveCompleteListener) this.moveCompleteListener();
 };
 
 Cube.prototype._updateCubiesRotation = function _updateCubiesRotation() {

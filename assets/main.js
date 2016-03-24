@@ -30,7 +30,8 @@ function getParameterByName(name) {
 }
 
 function updateUI() {
-    document.getElementById('size').textContent = cube.size;
+  document.getElementById('size').textContent = cube.size;
+  document.getElementById('state').innerHTML = cube.getState(true);
 }
 
 var size = getParameterByName("size");
@@ -38,9 +39,14 @@ if (!size) size = 3;
 
 var size = Number(size);
 
+function moveCompleteListener() {
+  updateUI();
+}
+
 var cube = new Cube({
     size : size,
-    showLabels: true
+    showLabels: true,
+    moveCompleteListener: moveCompleteListener,
 });
 
 updateUI();
