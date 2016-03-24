@@ -11,7 +11,7 @@ for (var i = 0; i < ips.length; i++){
     var opt = document.createElement('option');
     var name = ips[i];
     opt.value = name;
-    opt.innerHTML = name.charAt(0).toUpperCase() + name.slice(1);;
+    opt.innerHTML = name.charAt(0).toUpperCase() + name.slice(1);
     sel.appendChild(opt);
 }
 sel.value = defaults.animation.interpolator;
@@ -19,6 +19,8 @@ sel.value = defaults.animation.interpolator;
 sel.addEventListener('change', function() {
     cube.setInterpolator(this.value);
 });
+
+
 
 function getParameterByName(name) {
     name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
@@ -73,4 +75,10 @@ addListener('toggle-labels-button', 'click', function() {
 });
 addListener('reset-camera-button', 'click', function() {
     cube.resetCamera();
+});
+
+addListener('canvas-container', 'click', function() {
+    console.log("this:",this);
+    document.location.hash = '#canvas-container';
+    this.focus();
 });
