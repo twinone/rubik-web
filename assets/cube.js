@@ -137,13 +137,22 @@ Cube.prototype.getState = function getState(fancy = false) {
 
 
 Cube.prototype.setState = function setState(state) {
-    // apply the serialized state to the cubies
-    // reset them?
-
-    // reset cubies
-
-    // apply given state
-
+  var s = Math.sqrt(state.length/6);
+  if (s%1!==0) { console.log("Invalid state length!"); return; }
+  if (this.size != s) this.setSize(s);
+  var n = 0;
+  for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
+      this.cubies[j][s-1-i][s-1].setSticker(Face.UP, util.charToFace(state[n++]));
+  for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
+      this.cubies[0][s-1-j][s-1-i].setSticker(Face.LEFT, util.charToFace(state[n++]));
+  for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
+      this.cubies[j][0][s-1-i].setSticker(Face.FRONT, util.charToFace(state[n++]));
+  for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
+      this.cubies[s-1][j][s-1-i].setSticker(Face.RIGHT, util.charToFace(state[n++]));
+  for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
+      this.cubies[s-1-j][s-1][s-1-i].setSticker(Face.BACK, util.charToFace(state[n++]));
+  for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
+      this.cubies[j][i][0].setSticker(Face.DOWN, util.charToFace(state[n++]));
 }
 
 Cube.prototype.setInterpolator = function setInterpolator(interpolator) {

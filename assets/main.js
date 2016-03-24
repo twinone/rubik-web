@@ -5,6 +5,7 @@ var interpolation = require("./interpolation");
 
 var Face = require("./model").Face;
 var State = require("./state").State;
+var util = require("./util");
 
 
 var sel = document.getElementById('select-interpolator');
@@ -22,25 +23,16 @@ sel.addEventListener('change', function() {
     cube.setInterpolator(this.value);
 });
 
-
-
-function getParameterByName(name) {
-    name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
-    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
-    results = regex.exec(location.search);
-    return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
-}
-
 function updateUI() {
   document.getElementById('size').textContent = cube.size;
-  document.getElementById('fancy-state').innerHTML = cube.getState(true);
+  // document.getElementById('fancy-state').innerHTML = cube.getState(true);
   document.getElementById('state').innerHTML = cube.getState(false);
 }
 
-var size = getParameterByName("size");
-if (!size) size = 3;
-
+var size = util.getQueryParameter("size") || 3;
 var size = Number(size);
+
+var state = util.getQueryParameter("state");
 
 function moveCompleteListener() {
   updateUI();
@@ -51,6 +43,7 @@ var cube = new Cube({
     showLabels: true,
     moveCompleteListener: moveCompleteListener,
 });
+if (state) cube.setState(state);
 
 updateUI();
 
@@ -91,7 +84,6 @@ addListener('reset-camera-button', 'click', function() {
 });
 
 addListener('canvas', 'click', function() {
-    document.location.hash = '#canvas';
     this.focus();
 });
 
@@ -100,10 +92,15 @@ addListener('run-algorithm', 'click', function() {
 });
 
 addListener('change-state', 'click', function() {
-  console.log(document.getElementById("state").textContent);
-    var state = State();
+  cube.setState(document.getElementById('new-state').value);
+  updateUI();
+});
+
+addListener('copy-state', 'click', function() {
+  var url = util.appendQueryParameter(window.location.href, "state", cube.getState());
+  util.copyToClipboard(url);
+  //window.location.href = url;
 });
 
 addListener('test-button', 'click', function() {
-  cube.cubies[0][0][0].setSticker(Face.DOWN, Face.UP);
 });

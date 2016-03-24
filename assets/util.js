@@ -165,7 +165,55 @@ function faceToColorString(face) {
     }
 }
 
+// http://stackoverflow.com/questions/5999118/add-or-update-query-string-parameter
+// https://gist.github.com/niyazpk/f8ac616f181f6042d1e0
+function appendQueryParameter(uri, key, value) {
+    // remove the hash part before operating on the uri
+    var i = uri.indexOf('#');
+    var hash = i === -1 ? ''  : uri.substr(i);
+         uri = i === -1 ? uri : uri.substr(0, i);
 
+    var re = new RegExp("([?&])" + key + "=.*?(&|$)", "i");
+    var separator = uri.indexOf('?') !== -1 ? "&" : "?";
+    if (uri.match(re)) {
+        uri = uri.replace(re, '$1' + key + "=" + value + '$2');
+    } else {
+        uri = uri + separator + key + "=" + value;
+    }
+    return uri + hash;  // finally append the hash as well
+}
+
+// http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
+function getQueryParameter(name, url) {
+    if (!url) url = window.location.href;
+    url = url.toLowerCase(); // This is just to avoid case sensitiveness
+    name = name.replace(/[\[\]]/g, "\\$&").toLowerCase();// This is just to avoid case sensitiveness for query parameter name
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
+
+// http://stackoverflow.com/questions/400212/how-do-i-copy-to-the-clipboard-in-javascript
+function copyToClipboard(text) {
+  var textArea = document.createElement("textarea");
+  textArea.style.position = 'fixed';
+  textArea.style.top = 0;
+  textArea.style.left = 0;
+  textArea.style.width = '2em';
+  textArea.style.height = '2em';
+  textArea.style.padding = 0;
+  textArea.style.border = 'none';
+  textArea.style.outline = 'none';
+  textArea.style.boxShadow = 'none';
+  textArea.style.background = 'transparent';
+  textArea.value = text;
+  document.body.appendChild(textArea);
+  textArea.select();
+  document.execCommand('copy');
+  document.body.removeChild(textArea);
+}
 
 module.exports = {
     rotateLayer: rotateLayer,
@@ -179,4 +227,7 @@ module.exports = {
     faceToColorString: faceToColorString,
     axisToFace: axisToFace,
     faceToAxis: faceToAxis,
+    appendQueryParameter: appendQueryParameter,
+    getQueryParameter: getQueryParameter,
+    copyToClipboard: copyToClipboard,
 };
