@@ -1,4 +1,5 @@
 var model = require("./model");
+var util = require("./util");
 var Face = model.Face;
 
 // The order in which faces are serialized
@@ -9,6 +10,9 @@ offsets[Face.FRONT] = 2;
 offsets[Face.RIGHT] = 3;
 offsets[Face.BACK] = 4;
 offsets[Face.DOWN] = 5;
+
+// Faces by their index
+var FACES = [Face.UP, Face.LEFT, Face.FRONT, Face.RIGHT, Face.BACK, Face.DOWN];
 
 // Faces adjacent to eachother
 // Each line represents a face which is commented
@@ -36,13 +40,6 @@ var ROT = [
     [  3, NaN,   0, NaN,   0,   1], // R [U L F R B D]
     [  2,   0, NaN,   0, NaN,   2], // B [U L F R B D]
     [NaN,   1,   0,   3,   2, NaN], // D [U L F R B D]
-
-    // [2, 1, 0, 3], // UP [BACK, RIGHT, FRONT, LEFT]
-    // [1, 0, 3, 0], // LEFT [UP, FRONT, DOWN, BACK]
-    // [0, 0, 0, 0], // FRONT [UP, RIGHT, DOWN, LEFT]
-    // [3, 0, 1, 0], // RIGHT [UP, BACK, DOWN, FRONT]
-    // [2, 0, 2, 0], // BACK [UP, LEFT, DOWN, RIGHT]
-    // [0, 3, 2, 1], // DOWN [FRONT, RIGHT, BACK, LEFT]
 ];
 
 
@@ -129,7 +126,7 @@ State.prototype._getAdjacentLine = function _getAdjacentLine(face, direction, la
     var dst = ADJ[index][direction]; // target face
     var dsti = offsets[dst];
     var fdir = (ROT[index][dsti]+direction+2) % 4;
-    console.log("From face: ", index, "to", dsti, "dir=",direction, "fdir =", fdir);
+    //console.log("From face: ", index, "to", dsti, "dir=",direction, "fdir =", fdir);
 
     return this._getRotatedLine(dst, fdir, layer).reverse();
 }
@@ -143,6 +140,71 @@ State.prototype._getRotatedLine = function _getRotatedLine(face, direction, laye
         case 3: return this.col(face, layer).reverse();
     }
 }
+
+// TODO Add support for > 3x3 cubes
+// Returns whatever is at the intersecion of the faces
+State.prototype.get = function get(stickers) {
+
+}
+// returns the faces in which the piece searched for is located
+// in the same order as the input
+// For example find([Face.UP, Face.LEFT]) would return [Face.LEFT, Face.UP]
+// if the UL edge was at the correct position but wrong orientation
+// stickers: Array of length [0..2] containing the stickers to search for
+State.prototype.find = function find(stickers) {
+    var l = stickers.length;
+    if (l < 1 || l > 3) throw new Error("Invalid search");
+    if (l == 1) return this._findCenter(stickers);
+    if (l == 2) return this._findEdge(stickers);
+    if (l == 3) return this._findCorner(stickers);
+}
+
+// TODO Add support for > 3x3 cubes
+State.prototype._findCenter = function _findCenter(stickers) {
+    var s2 = this.size * this.size;
+    var offset = parseInt(s2 / 2);
+    var step = s2;
+    for (var i = 0; i < 6; i++) {
+        if (this.state[offset+step*i] == stickers[0]) return util.faceToChar(FACES[i]);
+    }
+}
+
+// TODO Add support for > 3x3 cubes
+State.prototype._findEdge = function _findEdge(stickers) {
+    var s = stickers[0];
+
+}
+
+State.prototype._findCorner = function _findCorner(stickers) {
+    var s = stickers[0];
+}
+
+State.prototype.algorithm = function algorithm(alg) {
+    var moves = alg.split(" ");
+    for (var i = 0; i < moves.length; i++) {
+        var move = moves[i];
+        var p = 0;
+        var c = move.charAt(p++);
+        var face = util.charToFace(c);
+        var axis = util.charToAxis(c);
+        var cw = true;
+        var upper = c == c.toUpperCase(); // uppercase letter is clockwise
+        // process prime (inverts turn direction)
+        c = move.charAt(p++);
+        if (c == "'") {
+            cw = !cw;
+        }
+
+        if (face) {
+            var layers = [0];
+            if (!upper) layers.push(1);
+        } else if (axis) {
+            var layers = []; for (var i = 0; i < this.size; i++) layers.push(i);
+        }
+        this.rotate(face, cw, layers);
+    }
+}
+
 
 function swap4(v, i0, i1, i2, i3, cw) { if (cw) swap4CW(v, i0, i1, i2, i3); else swap4CCW(v, i0, i1, i2, i3); }
 function swap4CCW(v, i0, i1, i2, i3) { console.log("ccw");swap4CW(v, i3, i2, i1, i0); }

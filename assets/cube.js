@@ -7,6 +7,7 @@ require("./vendor/helvetiker.min.js");
 require("./vendor/projector.js");
 var Cubie = require("./cubie").Cubie;
 
+var state = require("./state");
 var solver = require("./solver");
 var model = require("./model");
 var Axis = model.Axis;
@@ -236,7 +237,7 @@ Cube.prototype.scramble = function scramble(num) {
 };
 
 Cube.prototype.getSolution = function getSolution() {
-    return solver.Solve(this.getState());
+    return solver.solve(new state.State(this.getState()));
 }
 
 Cube.prototype._optimizeQueue = function _optimizeQueue() {
@@ -538,19 +539,29 @@ Cube.prototype.algorithm = function algorithm(algorithm) {
         // process letter
         var c = move.charAt(p++);
         var face = util.charToFace(c);
-        if (!face) throw "Invalid move: " + c;
+        var axis = util.charToAxis(c);
+
         var cw = c == c.toUpperCase(); // uppercase letter is clockwise
         // process prime (inverts turn direction)
         c = move.charAt(p++);
         if (c == "'") {
             cw = !cw;
         }
-        var layer = (face == Face.FRONT || face == Face.LEFT || face == Face.DOWN)
-        ? layerNumber
-        : this.size -1 - layerNumber;
-        var layers = [layer];
 
-        this._enqueueAnimation(new Animation(cw ? face: -face, layers), false);
+        if (face) {
+            var layer = (face == Face.FRONT || face == Face.LEFT || face == Face.DOWN)
+            ? layerNumber
+            : this.size -1 - layerNumber;
+            var layers = [layer];
+
+            this._enqueueAnimation(new Animation(cw ? face: -face, layers), false);
+        } else if (axis) {
+            var layers = []; for (var i = 0; i < this.size; i++) layers.push(i);
+            if (axis) {
+                this._enqueueAnimation(new Animation(cw ? axis : -axis, layers), false);
+            }
+        }
+
     }
 }
 

@@ -107,9 +107,9 @@ addListener('test-button', 'click', function() {
     // Test states
   var state = new State(cube.getState());
   var orig = state.state.join("");
-  state.rotate(Face.UP, true, [0,1,2]);
+  // state.rotate(Face.UP, true, [1]);
+  state.algorithm(document.getElementById('algorithm').value);
   console.log("ORIG=",orig);
   console.log("NEW =",state.state.join(""));
   cube.setState(state.state.join(""));
-
 });

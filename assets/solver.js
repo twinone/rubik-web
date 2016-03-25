@@ -1,24 +1,34 @@
 /**
 This file implements the solver for a 3x3 Cube
 */
-var state = require("./state");
 
-function Solve(state) {
-    
+function solve(state) {
+    return solveCenters(state);
 }
-function SolveCross(state) {
+// We rotate the cube so that the white center is down
+function solveCenters(state) {
+    var f = state.find("D");
+    console.log("white center is at: ", f);
+    var alg = "";
+    switch (f) {
+        case "L": alg = "Z'"; break;
+        case "R": alg = "Z"; break;
+        case "F": alg = "X'"; break;
+        case "B": alg = "X"; break;
+        case "U": alg = "X X"; break;
+    }
+    state.algorithm(alg);
 }
-function SolveFirstLayer(state) {
+
+function solveCross(state) {
 }
-function SolveSecondLayer(state) {
+function solveFirstLayer(state) {
 }
-function SolveThirdLayer(state) {
+function solveSecondLayer(state) {
+}
+function solveThirdLayer(state) {
 }
 
 module.exports = {
-  Solve: Solve,
-  SolveCross: SolveCross,
-  SolveFirstLayer: SolveFirstLayer,
-  SolveSecondLayer: SolveSecondLayer,
-  SolveThirdLayer: SolveThirdLayer,
+  solve: solve,
 };
