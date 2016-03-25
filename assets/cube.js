@@ -32,7 +32,7 @@ var ROTATION_MATRIX = [
 
 function Cube(options) {
     if (!options)
-        options = {};
+    options = {};
     this.dt = 0,
     this.scene = null;
     this.camera = null;
@@ -61,9 +61,9 @@ function Cube(options) {
     this.anim = Object.create(defaults.animation);
 
     if (options.animation)
-        Object.keys(options.animation).forEach(function(key) {
-            this.anim[key] = options.animation[key];
-        });
+    Object.keys(options.animation).forEach(function(key) {
+        this.anim[key] = options.animation[key];
+    });
 
 
     this.anim.animating = false;
@@ -101,9 +101,9 @@ Cube.prototype.setAnimationDuration = function setAnimationDuration(duration) {
 
 /*
 If we unfold the cube in the following layout:
- U
+U
 LFRB
- D
+D
 A State is the stickers of each face in order ULFRBD in reading order (ltr)
 The solved state would be:
 uuuuuullllllffffffrrrrrrbbbbbbdddddd
@@ -112,47 +112,47 @@ Where u means the "up" color.
 
 */
 Cube.prototype.getState = function getState(fancy = false) {
-  var s = this.size;
-  var faces = "";
-  if (fancy) faces += "UP: ";
-  for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
-      faces += util.faceToChar(this.cubies[j][s-1-i][s-1].getSticker(Face.UP));
-  if (fancy) faces += "<br>LEFT: ";
-  for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
-      faces += util.faceToChar(this.cubies[0][s-1-j][s-1-i].getSticker(Face.LEFT));
-  if (fancy) faces += "<br>FRONT: ";
-  for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
-      faces += util.faceToChar(this.cubies[j][0][s-1-i].getSticker(Face.FRONT));
-  if (fancy) faces += "<br>RIGHT: ";
-  for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
-      faces += util.faceToChar(this.cubies[s-1][j][s-1-i].getSticker(Face.RIGHT));
-  if (fancy) faces += "<br>BACK: ";
-  for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
-      faces += util.faceToChar(this.cubies[s-1-j][s-1][s-1-i].getSticker(Face.BACK));
-  if (fancy) faces += "<br>DOWN: ";
-  for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
-      faces += util.faceToChar(this.cubies[j][i][0].getSticker(Face.DOWN));
-  return faces;
+    var s = this.size;
+    var faces = "";
+    if (fancy) faces += "UP: ";
+    for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
+    faces += util.faceToChar(this.cubies[j][s-1-i][s-1].getSticker(Face.UP));
+    if (fancy) faces += "<br>LEFT: ";
+    for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
+    faces += util.faceToChar(this.cubies[0][s-1-j][s-1-i].getSticker(Face.LEFT));
+    if (fancy) faces += "<br>FRONT: ";
+    for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
+    faces += util.faceToChar(this.cubies[j][0][s-1-i].getSticker(Face.FRONT));
+    if (fancy) faces += "<br>RIGHT: ";
+    for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
+    faces += util.faceToChar(this.cubies[s-1][j][s-1-i].getSticker(Face.RIGHT));
+    if (fancy) faces += "<br>BACK: ";
+    for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
+    faces += util.faceToChar(this.cubies[s-1-j][s-1][s-1-i].getSticker(Face.BACK));
+    if (fancy) faces += "<br>DOWN: ";
+    for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
+    faces += util.faceToChar(this.cubies[j][i][0].getSticker(Face.DOWN));
+    return faces;
 }
 
 
 Cube.prototype.setState = function setState(state) {
-  var s = Math.sqrt(state.length/6);
-  if (s%1!==0) { console.log("Invalid state length!"); return; }
-  if (this.size != s) this.setSize(s);
-  var n = 0;
-  for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
-      this.cubies[j][s-1-i][s-1].setSticker(Face.UP, util.charToFace(state[n++]));
-  for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
-      this.cubies[0][s-1-j][s-1-i].setSticker(Face.LEFT, util.charToFace(state[n++]));
-  for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
-      this.cubies[j][0][s-1-i].setSticker(Face.FRONT, util.charToFace(state[n++]));
-  for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
-      this.cubies[s-1][j][s-1-i].setSticker(Face.RIGHT, util.charToFace(state[n++]));
-  for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
-      this.cubies[s-1-j][s-1][s-1-i].setSticker(Face.BACK, util.charToFace(state[n++]));
-  for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
-      this.cubies[j][i][0].setSticker(Face.DOWN, util.charToFace(state[n++]));
+    var s = Math.sqrt(state.length/6);
+    if (s%1!==0) { console.log("Invalid state length!"); return; }
+    if (this.size != s) this.setSize(s);
+    var n = 0;
+    for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
+    this.cubies[j][s-1-i][s-1].setSticker(Face.UP, util.charToFace(state[n++]));
+    for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
+    this.cubies[0][s-1-j][s-1-i].setSticker(Face.LEFT, util.charToFace(state[n++]));
+    for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
+    this.cubies[j][0][s-1-i].setSticker(Face.FRONT, util.charToFace(state[n++]));
+    for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
+    this.cubies[s-1][j][s-1-i].setSticker(Face.RIGHT, util.charToFace(state[n++]));
+    for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
+    this.cubies[s-1-j][s-1][s-1-i].setSticker(Face.BACK, util.charToFace(state[n++]));
+    for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
+    this.cubies[j][i][0].setSticker(Face.DOWN, util.charToFace(state[n++]));
 }
 
 Cube.prototype.setInterpolator = function setInterpolator(interpolator) {
@@ -177,25 +177,24 @@ Cube.prototype._performRaycast = function _performRaycast(e) {
 
     // update the mouse position
     // update the mouse variable
-	this.mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-	this.mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    this.mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+    this.mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
 
     // create a Ray with origin at the mouse position
-	// and direction into the scene (camera direction)
-	var vector = new THREE.Vector3(this.mouse.x, this.mouse.y, 1);
+    // and direction into the scene (camera direction)
+    var vector = new THREE.Vector3(this.mouse.x, this.mouse.y, 1);
     vector.unproject(this.camera);
 
-	var ray = new THREE.Raycaster(this.camera.position,
-                                  vector.sub(this.camera.position).normalize());
+    var ray = new THREE.Raycaster(this.camera.position, vector.sub(this.camera.position).normalize());
 
     var cubies = [];
     for (var i = 0; i < this.size; i++)
-        for (var j = 0; j < this.size; j++)
-            for (var k = 0; k < this.size; k++) {
-                cubies.push(this.cubies[i][j][k]);
-            }
-	// cubies
-	var intersects = ray.intersectObjects(cubies);
+    for (var j = 0; j < this.size; j++)
+    for (var k = 0; k < this.size; k++) {
+        cubies.push(this.cubies[i][j][k]);
+    }
+    // cubies
+    var intersects = ray.intersectObjects(cubies);
     if (intersects.length > 0) {
 
         var elem = intersects[0];
@@ -205,21 +204,12 @@ Cube.prototype._performRaycast = function _performRaycast(e) {
 
         this._onCubieClick(elem.object, elem.object.coords, elem.face.normal);
     }
-    // labels
-    if (this.showLabels) {
-        // intersects = ray.intersectObjects(this.labels.children);
-
-        // TODO put labels in a container
-        // Clicking only the letter is very difficult
-    }
-
-
 }
 
 Cube.prototype._onCubieClick = function _onCubieClick(cubie, coords, direction) {
-//    console.log("click pos=("+ coords.x + "," + coords.y + "," + coords.z + "), " +
-//                "normal=("   + direction.x + "," + direction.y + "," + direction.z + ")");
-//    console.log(cubie);
+    //    console.log("click pos=("+ coords.x + "," + coords.y + "," + coords.z + "), " +
+    //                "normal=("   + direction.x + "," + direction.y + "," + direction.z + ")");
+    //    console.log(cubie);
 
     var face = direction; // local coords...
     console.log(
@@ -229,7 +219,7 @@ Cube.prototype._onCubieClick = function _onCubieClick(cubie, coords, direction) 
         (cubie.getSticker(Face.FRONT) ? "(F: "+util.faceToColorString(cubie.getSticker(Face.FRONT))+") - " : "") +
         (cubie.getSticker(Face.UP) ? "(U: "+util.faceToColorString(cubie.getSticker(Face.UP))+") - " : "") +
         (cubie.getSticker(Face.DOWN) ? "(D: "+util.faceToColorString(cubie.getSticker(Face.DOWN))+")" : "")
-               );
+    );
 }
 
 Cube.prototype.scramble = function scramble(num) {
@@ -271,8 +261,8 @@ Cube.prototype._optimizeQueue = function _optimizeQueue() {
         found = false;
         for (var i = q.length -4; i >= 0; i--) {
             if ((q[i].equals(q[i+1])) &&
-                (q[i].equals(q[i+2])) &&
-                (q[i].equals(q[i+3]))) {
+            (q[i].equals(q[i+2])) &&
+            (q[i].equals(q[i+3]))) {
                 found = true;
                 q.splice(i, 4);
                 i -= 3;
@@ -306,7 +296,7 @@ Cube.prototype.setSize = function setSize(size) {
 };
 Cube.prototype.width = function() {
     return this.cubieWidth * (1 + this.cubieSpacing)
-        * this.SIZE - this.cubieWidth * this.cubieSpacing;
+    * this.SIZE - this.cubieWidth * this.cubieSpacing;
 };
 
 Cube.prototype._setupCubies = function() {
@@ -409,7 +399,7 @@ Cube.prototype._init = function _init() {
             }
             if (self.anim.queue.length != 0) {
                 self.anim.currDuration = self.anim.duration *
-                    Math.max(0.3, Math.pow(0.9, self.anim.queue.length/2));
+                Math.max(0.3, Math.pow(0.9, self.anim.queue.length/2));
                 self._startAnimation(self.anim.queue.shift());
             }
         }
@@ -499,7 +489,8 @@ Cube.prototype._alignCubies = function _alignCubies() {
                 this.cubies[i][j][k].position.set(
                     (i-(this.size-1)/2) * this.cubieWidth*(1+this.cubieSpacing),
                     (j-(this.size-1)/2) * this.cubieWidth*(1+this.cubieSpacing),
-                    (k-(this.size-1)/2) * this.cubieWidth*(1+this.cubieSpacing));
+                    (k-(this.size-1)/2) * this.cubieWidth*(1+this.cubieSpacing)
+                );
             }
         }
     }
@@ -515,15 +506,15 @@ Cube.prototype._onKeyPress = function onKeyPress(e) {
     var cw = key.toUpperCase() === key ^ key.shiftKey;
     var face = util.charToFace(key);
 
-//    console.log("ctrl: ", key.ctrlKey, "face: ", face);
+    //    console.log("ctrl: ", key.ctrlKey, "face: ", face);
     if (key.ctrlKey && face) {
         e.preventDefault();
         this.lookAtFace(face);
     }
 
     var layer = (face == Face.FRONT || face == Face.LEFT || face == Face.DOWN)
-        ? layerNumber
-        : this.size -1 - layerNumber;
+    ? layerNumber
+    : this.size -1 - layerNumber;
 
     if (face) {
         layerNumber = 0;
@@ -538,29 +529,29 @@ Cube.prototype._onKeyPress = function onKeyPress(e) {
 };
 
 Cube.prototype.algorithm = function algorithm(algorithm) {
-  var moves = algorithm.split(" ");
-  for (var i = 0; i < moves.length; i++) {
-    var move = moves[i];
-    var p = 0;
-    // process number
-    // TODO
-    // process letter
-    var c = move.charAt(p++);
-    var face = util.charToFace(c);
-    if (!face) throw "Invalid move: " + c;
-    var cw = c == c.toUpperCase(); // uppercase letter is clockwise
-    // process prime (inverts turn direction)
-    c = move.charAt(p++);
-    if (c == "'") {
-      cw = !cw;
-    }
-    var layer = (face == Face.FRONT || face == Face.LEFT || face == Face.DOWN)
+    var moves = algorithm.split(" ");
+    for (var i = 0; i < moves.length; i++) {
+        var move = moves[i];
+        var p = 0;
+        // process number
+        // TODO
+        // process letter
+        var c = move.charAt(p++);
+        var face = util.charToFace(c);
+        if (!face) throw "Invalid move: " + c;
+        var cw = c == c.toUpperCase(); // uppercase letter is clockwise
+        // process prime (inverts turn direction)
+        c = move.charAt(p++);
+        if (c == "'") {
+            cw = !cw;
+        }
+        var layer = (face == Face.FRONT || face == Face.LEFT || face == Face.DOWN)
         ? layerNumber
         : this.size -1 - layerNumber;
-    var layers = [layer];
+        var layers = [layer];
 
-    this._enqueueAnimation(new Animation(cw ? face: -face, layers), false);
-  }
+        this._enqueueAnimation(new Animation(cw ? face: -face, layers), false);
+    }
 }
 
 
@@ -579,12 +570,12 @@ function Animation(axis, layers) {
 // the state after the animation would be the same as the current state
 Animation.prototype.cancels = function cancels(anim) {
     return this.axis + anim.axis == 0
-        && util.deepArrayEquals(this.layers.sort(), anim.layers.sort());
+    && util.deepArrayEquals(this.layers.sort(), anim.layers.sort());
 };
 
 Animation.prototype.equals = function equals(anim) {
     return this.axis == anim.axis
-        && util.deepArrayEquals(this.layers.sort(), anim.layers.sort());
+    && util.deepArrayEquals(this.layers.sort(), anim.layers.sort());
 };
 
 Cube.prototype._enqueueAnimation = function _enqueueAnimation(anim, optimize) {
@@ -671,8 +662,8 @@ Cube.prototype._addLayerToActiveGroup = function addLayerToActiveGroup(face, lay
         for (var j = 0; j < this.size; j++) {
             for (var k = 0; k < this.size; k++) {
                 if ((i == x || x == -1) &&
-                    (j == y || y == -1) &&
-                    (k == z || z == -1)) {
+                (j == y || y == -1) &&
+                (k == z || z == -1)) {
                     sceneutils.attach(this.cubies[i][j][k], this.scene, this.active);
                 }
             }

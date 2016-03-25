@@ -74,18 +74,18 @@ function empty(elem) {
 function deepArrayEquals(a, b) {
     // if any array is a falsy value, return
     if (!a || !b)
-        return false;
+    return false;
 
     // compare lengths - can save a lot of time
     if (a.length != b.length)
-        return false;
+    return false;
 
     for (var i = 0, l = a.length; i < l; i++) {
         // Check if we have nested arrays
         if (a[i] instanceof Array && b[i] instanceof Array) {
             // recurse into the nested arrays
             if (!deepArrayEquals(a[i], b[i]))
-                return false;
+            return false;
         }
         else if (a[i] != b[i]) {
             // Warning - two different object instances will never be equal: {x:20} != {x:20}
@@ -119,12 +119,12 @@ function faceToAxis(face) {
 }
 
 function axisToFace(axis) {
-  if (axis.x == -1) return Face.LEFT;
-  if (axis.x == 1) return Face.RIGHT;
-  if (axis.y == -1) return Face.FRONT;
-  if (axis.y == 1) return Face.BACK;
-  if (axis.z == -1) return Face.DOWN;
-  if (axis.z == 1) return Face.UP;
+    if (axis.x == -1) return Face.LEFT;
+    if (axis.x == 1) return Face.RIGHT;
+    if (axis.y == -1) return Face.FRONT;
+    if (axis.y == 1) return Face.BACK;
+    if (axis.z == -1) return Face.DOWN;
+    if (axis.z == 1) return Face.UP;
 }
 
 
@@ -167,7 +167,7 @@ function appendQueryParameter(uri, key, value) {
     // remove the hash part before operating on the uri
     var i = uri.indexOf('#');
     var hash = i === -1 ? ''  : uri.substr(i);
-         uri = i === -1 ? uri : uri.substr(0, i);
+    uri = i === -1 ? uri : uri.substr(0, i);
 
     var re = new RegExp("([?&])" + key + "=.*?(&|$)", "i");
     var separator = uri.indexOf('?') !== -1 ? "&" : "?";
@@ -185,7 +185,7 @@ function getQueryParameter(name, url) {
     url = url.toLowerCase(); // This is just to avoid case sensitiveness
     name = name.replace(/[\[\]]/g, "\\$&").toLowerCase();// This is just to avoid case sensitiveness for query parameter name
     var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
-        results = regex.exec(url);
+    results = regex.exec(url);
     if (!results) return null;
     if (!results[2]) return '';
     return decodeURIComponent(results[2].replace(/\+/g, " "));
@@ -193,22 +193,22 @@ function getQueryParameter(name, url) {
 
 // http://stackoverflow.com/questions/400212/how-do-i-copy-to-the-clipboard-in-javascript
 function copyToClipboard(text) {
-  var textArea = document.createElement("textarea");
-  textArea.style.position = 'fixed';
-  textArea.style.top = 0;
-  textArea.style.left = 0;
-  textArea.style.width = '2em';
-  textArea.style.height = '2em';
-  textArea.style.padding = 0;
-  textArea.style.border = 'none';
-  textArea.style.outline = 'none';
-  textArea.style.boxShadow = 'none';
-  textArea.style.background = 'transparent';
-  textArea.value = text;
-  document.body.appendChild(textArea);
-  textArea.select();
-  document.execCommand('copy');
-  document.body.removeChild(textArea);
+    var textArea = document.createElement("textarea");
+    textArea.style.position = 'fixed';
+    textArea.style.top = 0;
+    textArea.style.left = 0;
+    textArea.style.width = '2em';
+    textArea.style.height = '2em';
+    textArea.style.padding = 0;
+    textArea.style.border = 'none';
+    textArea.style.outline = 'none';
+    textArea.style.boxShadow = 'none';
+    textArea.style.background = 'transparent';
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textArea);
 }
 
 module.exports = {

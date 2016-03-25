@@ -1,61 +1,61 @@
 <!doctype html>
 <html>
-    <head>
+<head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <title>Cube visualizer</title>
     <style>
-        body { margin: 0; }
-        canvas { width: 100%; height: 100%; position: absolute; z-index: 0; }
-        div#container {
-            position: absolute;
-            z-index: 1;
-        }
-        div#pad {
-            padding: 2em;
-        }
-        input, select {
-            margin-top: 2px;
-            margin-bottom: 2px;
-        }
-        #anim-duration {
-            width: 4em;
-            text-align: right;
-        }
+    body { margin: 0; }
+    canvas { width: 100%; height: 100%; position: absolute; z-index: 0; }
+    div#container {
+        position: absolute;
+        z-index: 1;
+    }
+    div#pad {
+        padding: 2em;
+    }
+    input, select {
+        margin-top: 2px;
+        margin-bottom: 2px;
+    }
+    #anim-duration {
+        width: 4em;
+        text-align: right;
+    }
     </style>
-    </head>
+</head>
 
-    <body>
-      <canvas tabindex="1" id="canvas"></canvas>
-      <div id="container">
-          <div id="pad">
-              <span>Cube size: </span>
-              <input id="decrement-size-button" type="button" value="-">
-              <span id="size"></span>
-              <input id="increment-size-button" type="button" value="+"><br/>
-              <input id="scramble-button" type="button" value="Scramble"><br/>
-              <input id="solve-button" type="button" value="Solve"><br/>
-              <input id="toggle-labels-button" type="button" value="Labels"><br/>
-              <input id="reset-camera-button" type="button" value="Reset Camera"><br/>
-              <span>Animation:</span><br>
-              <select id="select-interpolator"></select>
-              <input id="anim-duration" type="text">
-              <span>ms</span><br/>
-              <input id="algorithm" type="text" placeholder="Algorithm">
-              <input type="button" id="run-algorithm" value="Run"><br/>
-              State:<br/>
-              <!--<div><span id="fancy-state"/><br/></div>-->
-              <div><textarea id="state"/></textarea><br/></div>
-              Custom state:
-              <div><textarea id="new-state"></textarea></div>
-              <input type="button" id="change-state" value="Apply"><br/>
-              <input type="button" id="copy-state" value="Copy State"><br/>
-              <input type="button" id="test-button" value="Test Button"><br/>
+<body>
+    <canvas tabindex="1" id="canvas"></canvas>
+    <div id="container">
+        <div id="pad">
+            <span>Cube size: </span>
+            <input id="decrement-size-button" type="button" value="-">
+            <span id="size"></span>
+            <input id="increment-size-button" type="button" value="+"><br/>
+            <input id="scramble-button" type="button" value="Scramble"><br/>
+            <input id="solve-button" type="button" value="Solve"><br/>
+            <input id="toggle-labels-button" type="button" value="Labels"><br/>
+            <input id="reset-camera-button" type="button" value="Reset Camera"><br/>
+            <span>Animation:</span><br>
+            <select id="select-interpolator"></select>
+            <input id="anim-duration" type="text">
+            <span>ms</span><br/>
+            <input id="algorithm" type="text" placeholder="Algorithm">
+            <input type="button" id="run-algorithm" value="Run"><br/>
+            State:<br/>
+            <!--<div><span id="fancy-state"/><br/></div>-->
+            <div><textarea id="state"/></textarea><br/></div>
+            <input type="button" id="copy-state" value="Copy State"><br/>
+            Custom state:
+            <div><textarea id="new-state"></textarea></div>
+            <input type="button" id="change-state" value="Apply"><br/>
+            <input type="button" id="test-button" value="Test Button"><br/>
 
-          </div>
+        </div>
 
-      </div>
-      <script src="build/bundle.js"></script>
-    </body>
+    </div>
+    <script src="build/bundle.js"></script>
+</body>
 </html>
