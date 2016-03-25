@@ -139,7 +139,7 @@ Cube.prototype.getState = function getState(fancy = false) {
 
 Cube.prototype.setState = function setState(state) {
     var s = Math.sqrt(state.length/6);
-    if (s%1!==0) { console.log("Invalid state length!"); return; }
+    if (s%1!==0) { console.log("Invalid state length (state="+state+")"); return; }
     if (this.size != s) this.setSize(s);
     var n = 0;
     for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
@@ -529,10 +529,12 @@ Cube.prototype._onKeyPress = function onKeyPress(e) {
     }
 };
 
-Cube.prototype.algorithm = function algorithm(algorithm) {
-    var moves = algorithm.split(" ");
+Cube.prototype.algorithm = function algorithm(alg) {
+    var moves = alg.split(" ");
     for (var i = 0; i < moves.length; i++) {
-        var move = moves[i];
+        var move = moves[i].trim();
+        if (move == "") continue;
+
         var p = 0;
         // process number
         // TODO
@@ -544,24 +546,17 @@ Cube.prototype.algorithm = function algorithm(algorithm) {
         var cw = c == c.toUpperCase(); // uppercase letter is clockwise
         // process prime (inverts turn direction)
         c = move.charAt(p++);
-        if (c == "'") {
-            cw = !cw;
-        }
-
+        if (c == "'") cw = !cw;
         if (face) {
             var layer = (face == Face.FRONT || face == Face.LEFT || face == Face.DOWN)
             ? layerNumber
             : this.size -1 - layerNumber;
             var layers = [layer];
-
             this._enqueueAnimation(new Animation(cw ? face: -face, layers), false);
         } else if (axis) {
-            var layers = []; for (var i = 0; i < this.size; i++) layers.push(i);
-            if (axis) {
-                this._enqueueAnimation(new Animation(cw ? axis : -axis, layers), false);
-            }
+            var layers = []; for (var j = 0; j < this.size; j++) layers.push(j);
+            this._enqueueAnimation(new Animation(cw ? axis : -axis, layers), false);
         }
-
     }
 }
 

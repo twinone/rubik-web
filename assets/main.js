@@ -74,7 +74,15 @@ addListener('scramble-button', 'click', function() {
     cube.scramble();
 });
 addListener('solve-button', 'click', function() {
-    console.log(cube.getSolution());
+    var alg = cube.getSolution();
+    console.log("Algorithm =",alg);
+    //// option 1: apply the algorithm to the cube
+    cube.algorithm(alg);
+
+    //// option 2: apply the algorithm to state, and state to cube
+    // var s = new State(cube.getState());
+    // s.algorithm(alg);
+    // cube.setState(s.state.join(""));
 });
 
 addListener('toggle-labels-button', 'click', function() {

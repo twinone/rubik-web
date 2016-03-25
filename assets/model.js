@@ -15,11 +15,6 @@ var Axis = {
     CUBE_Z: Face.FRONT,
 };
 
-function getFaceAxis(face) {
-    if (face == LEFT  || face == RIGHT) return Axis.X;
-    if (face == FRONT || face == BACK)  return Axis.Y;
-    if (face == DOWN  || face == UP)    return Axis.Z;
-}
 
 function axisToIndex(axis) {
     if (axis == Axis.X) return 0;
@@ -27,11 +22,9 @@ function axisToIndex(axis) {
     if (axis == Axis.Z) return 2;
 }
 
-
 module.exports = {
     Axis: Axis,
     Face: Face,
     faces: faces,
-    getFaceAxis: getFaceAxis,
     axisToIndex: axisToIndex,
 };

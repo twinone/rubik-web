@@ -115,8 +115,8 @@ State.prototype._rotateFace = function _rotateFace(face, cw) {
 State.prototype._rotateRing = function _rotateRing(face, layer = 0, cw) {
     var lines = [];
     for (var i = 0; i < 4; i++) lines.push(this._getAdjacentLine(face, i, layer));
-    for (var j = 0; j <= this.size; j++) {
-        console.log("swap ",lines[0][j], lines[1][j], lines[2][j], lines[3][j])
+    for (var j = 0; j < this.size; j++) {
+        //console.log("swap ",lines[0][j], lines[1][j], lines[2][j], lines[3][j])
         swap4(this.state, lines[0][j], lines[1][j], lines[2][j], lines[3][j], cw);
     }
 }
@@ -140,6 +140,19 @@ State.prototype._getRotatedLine = function _getRotatedLine(face, direction, laye
         case 3: return this.col(face, layer).reverse();
     }
 }
+
+// Gets the clockwise rotated line of a face
+State.prototype._getRotatedIndex = function _getRotatedIndex(face, direction, offset) {
+    var s = this.size;
+    switch (direction) {
+        case 0: return this.index(face, 0, offset);
+        case 1: return this.index(face, offset, s-1);
+        case 2: return this.index(face, s-1, s-1-offset);
+        case 3: return this.index(face, s-1-offset, 0);
+    }
+}
+
+
 
 // TODO Add support for > 3x3 cubes
 // Returns whatever is at the intersecion of the faces
@@ -169,45 +182,92 @@ State.prototype._findCenter = function _findCenter(stickers) {
     }
 }
 
+// Finds the next sticker in the given direction
+// Example: _next(Face.UP, size-1, 3) would give the sticker at Left(0,0)
+// Pre: Only valid to find stickers on two different faces
+State.prototype._nextIndex = function _nextIndex(face, dir, offset) {
+    var index = offsets[face];
+    var dst = ADJ[index][dir]; // target face
+    var dsti = offsets[dst];
+    var fdir = (ROT[index][dsti]+dir+2) % 4;
+
+    console.log();
+    var s = this.size;
+    return this._getRotatedIndex(dst, fdir, s-1-offset);
+}
+
 // TODO Add support for > 3x3 cubes
 State.prototype._findEdge = function _findEdge(stickers) {
-    var s = stickers[0];
-
+    for (var i = 0; i < FACES.length; i++) {
+        var f = FACES[i];
+        for (var j = 0; j < 4; j++) {
+            if (this.state[this._getRotatedIndex(f, j, 1)] != stickers[0]) continue;
+            if (this.state[this._nextIndex(f, j, 1)] == stickers[1]) {
+                return [util.faceToChar(f), util.faceToChar(ADJ[i][j])];
+            }
+        }
+    }
 }
 
 State.prototype._findCorner = function _findCorner(stickers) {
-    var s = stickers[0];
+    for (var i = 0; i < FACES.length; i++) {
+        var f = FACES[i];
+        for (var j = 0; j < 4; j++) {
+            if (this.state[this._getRotatedIndex(f, j, 0)] != stickers[0]) continue;
+            var a = this._nextIndex(f, j, 0);
+            var b = this._nextIndex(f, (j+3)%4, this.size-1);
+            //console.log("check corner ", "a=",this.describeIndex(a), "b=",this.describeIndex(b));
+            if (this.state[a] == stickers[1] && this.state[b] == stickers[2]) {
+                return [util.faceToChar(f), util.faceToChar(ADJ[i][j]), util.faceToChar(ADJ[i][(j+3)%4])];
+            }
+            if (this.state[b] == stickers[1] && this.state[a] == stickers[2]) {
+                return [util.faceToChar(f), util.faceToChar(ADJ[i][(j+3)%4]), util.faceToChar(ADJ[i][j])];
+            }
+        }
+    }
 }
 
 State.prototype.algorithm = function algorithm(alg) {
     var moves = alg.split(" ");
     for (var i = 0; i < moves.length; i++) {
-        var move = moves[i];
+        var move = moves[i].trim();
+        if (move == "") continue;
         var p = 0;
         var c = move.charAt(p++);
         var face = util.charToFace(c);
         var axis = util.charToAxis(c);
         var cw = true;
-        var upper = c == c.toUpperCase(); // uppercase letter is clockwise
+        var upper = (c == c.toUpperCase()); // uppercase letter is clockwise
         // process prime (inverts turn direction)
         c = move.charAt(p++);
-        if (c == "'") {
-            cw = !cw;
-        }
+        if (c == "'") cw = !cw;
 
         if (face) {
             var layers = [0];
             if (!upper) layers.push(1);
         } else if (axis) {
-            var layers = []; for (var i = 0; i < this.size; i++) layers.push(i);
+            var layers = []; for (var j = 0; j < this.size; j++) layers.push(j);
+            face = axis;
+        } else {
+            console.log("Invalid move: " + move);
+            continue;
         }
         this.rotate(face, cw, layers);
     }
 }
 
+State.prototype.describeIndex = function describeIndex(index) {
+    var s2 = this.size * this.size;
+    var face = parseInt(index / s2);
+    var i = index % s2;
+    var row = parseInt(i / this.size);
+    var col = i % this.size;
+    return index + ":" + this.state[index] + " (f=" + util.faceToChar(FACES[face]) + ",r=" + row + ",c=" + col + ")";
+}
+
 
 function swap4(v, i0, i1, i2, i3, cw) { if (cw) swap4CW(v, i0, i1, i2, i3); else swap4CCW(v, i0, i1, i2, i3); }
-function swap4CCW(v, i0, i1, i2, i3) { console.log("ccw");swap4CW(v, i3, i2, i1, i0); }
+function swap4CCW(v, i0, i1, i2, i3) { swap4CW(v, i3, i2, i1, i0); }
 function swap4CW(v, i0, i1, i2, i3) {
     tmp = v[i3];
     v[i3] = v[i2];
