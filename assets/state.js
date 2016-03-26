@@ -178,7 +178,12 @@ State.prototype._findCenter = function _findCenter(stickers) {
     var offset = parseInt(s2 / 2);
     var step = s2;
     for (var i = 0; i < 6; i++) {
-        if (this.state[offset+step*i] == stickers[0]) return util.faceToChar(FACES[i]);
+        var pos = offset+step*i;
+        if (this.state[pos] == stickers[0])
+        return {
+            "str": util.faceToChar(FACES[i]),
+            "pos": [pos],
+        };
     }
 }
 
@@ -201,9 +206,16 @@ State.prototype._findEdge = function _findEdge(stickers) {
     for (var i = 0; i < FACES.length; i++) {
         var f = FACES[i];
         for (var j = 0; j < 4; j++) {
-            if (this.state[this._getRotatedIndex(f, j, 1)] != stickers[0]) continue;
-            if (this.state[this._nextIndex(f, j, 1)] == stickers[1]) {
-                return [util.faceToChar(f), util.faceToChar(ADJ[i][j])];
+            var pos = [
+                this._getRotatedIndex(f, j, 1),
+                this._nextIndex(f, j, 1),
+            ];
+            if (this.state[pos[0]] != stickers[0]) continue;
+            if (this.state[pos[1]] == stickers[1]) {
+                return {
+                    "str": faceArrayToString([f, ADJ[i][j]]),
+                    "pos": pos,
+                };
             }
         }
     }
@@ -218,10 +230,10 @@ State.prototype._findCorner = function _findCorner(stickers) {
             var b = this._nextIndex(f, (j+3)%4, this.size-1);
             //console.log("check corner ", "a=",this.describeIndex(a), "b=",this.describeIndex(b));
             if (this.state[a] == stickers[1] && this.state[b] == stickers[2]) {
-                return [util.faceToChar(f), util.faceToChar(ADJ[i][j]), util.faceToChar(ADJ[i][(j+3)%4])];
+                return faceArrayToString([f, ADJ[i][j], ADJ[i][(j+3)%4]]);
             }
             if (this.state[b] == stickers[1] && this.state[a] == stickers[2]) {
-                return [util.faceToChar(f), util.faceToChar(ADJ[i][(j+3)%4]), util.faceToChar(ADJ[i][j])];
+                return faceArrayToString([f, ADJ[i][(j+3)%4], ADJ[i][j]]);
             }
         }
     }
@@ -256,16 +268,33 @@ State.prototype.algorithm = function algorithm(alg) {
     }
 }
 
-State.prototype.describeIndex = function describeIndex(index) {
-    var s2 = this.size * this.size;
-    var face = parseInt(index / s2);
-    var i = index % s2;
-    var row = parseInt(i / this.size);
-    var col = i % this.size;
-    return index + ":" + this.state[index] + " (f=" + util.faceToChar(FACES[face]) + ",r=" + row + ",c=" + col + ")";
+
+State.prototype.rowOf = function rowOf(index) {
+    var s = this.size;
+    return parseInt((index%(s*s))/s);
 }
 
+State.prototype.colOf = function colOf(index) {
+    var s = this.size;
+    return (index%(s*s))%s;
+}
 
+State.prototype.faceOf = function faceOf(index) {
+    return util.faceToChar(parseInt(index / (this.size*this.size)));
+}
+
+State.prototype.describeIndex = function describeIndex(index) {
+    var row = this.rowOf(index);
+    var col = this.colOf(index);
+    var f = this.faceOf(index);
+    return index + ":" + this.state[index] + " (f=" + f + ",r=" + row + ",c=" + col + ")";
+}
+
+function faceArrayToString(arr) {
+    var str = "";
+    for (var i = 0; i < arr.length; i++) str += util.faceToChar(arr[i]);
+    return str;
+}
 function swap4(v, i0, i1, i2, i3, cw) { if (cw) swap4CW(v, i0, i1, i2, i3); else swap4CCW(v, i0, i1, i2, i3); }
 function swap4CCW(v, i0, i1, i2, i3) { swap4CW(v, i3, i2, i1, i0); }
 function swap4CW(v, i0, i1, i2, i3) {
