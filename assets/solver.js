@@ -4,12 +4,13 @@ This file implements the solver for a 3x3 Cube
 
 function solve(state, steps) {
     var alg = [];
-    console.log("steps="+steps);
     if (steps == undefined || steps   > 0) alg = alg.concat(solveCenters(state));
     if (steps == undefined || steps   > 0) alg = alg.concat(solveCross(state));
-    if (steps == undefined || steps-- > 0) alg = alg.concat(solveFirstLayer(state));
+    if (steps == undefined || steps   > 0) alg = alg.concat(solveFirstLayer(state));
 
     if (steps == undefined || steps-- > 0) alg = alg.concat(solveSecondLayer(state));
+
+    if (steps == undefined || steps-- > 0) alg = alg.concat(solveYellowCrossOrientation(state));
 
 
     var opt = optimize(alg.slice());
@@ -37,7 +38,7 @@ function solveCenters(state) {
 }
 
 function solveCross(state) {
-    function run(x) { alg.push(x); state.algorithm(x); }
+    function run(x,u) { alg.push(x); state.algorithm(x); if (u) w = state.find(p); }
     var alg = [];
     var pieces = ["DL", "DF", "DR", "DB"];
     while (pieces.length > 0) {
@@ -45,7 +46,7 @@ function solveCross(state) {
         var w = state.find(p) // where the piece was found
         //console.log("piece", p, "is at", w.str);
         if (inLayer(w.str, "U")) {
-            while (!inLayer(w.str, p[1])) { run("U"); w = state.find(p); }
+            while (!inLayer(w.str, p[1])) { run("U", true); }
             var f = p[1];
             if (w.str[0] == "U") {
                 run(f);
@@ -64,7 +65,7 @@ function solveCross(state) {
             run(f+(!cw?"":"'"));
             pieces.push(p);
         } else if (w.str != p) {
-            var f = edgeOther(w.str, "D");
+            var f = after(w.str, "D");
             run(f);
             run(f);
             pieces.unshift(p);
@@ -73,7 +74,7 @@ function solveCross(state) {
     return alg;
 }
 function solveFirstLayer(state) {
-    function run(x) { alg.push(x); state.algorithm(x); }
+    function run(x,u) { alg.push(x); state.algorithm(x); if (u) w = state.find(p); }
     var alg = [];
     var pieces = ["DLF", "DFR", "DRB", "DBL"];
     var crashCount = 0;
@@ -85,7 +86,7 @@ function solveFirstLayer(state) {
         if (inLayer(w.str, "U")) {
             // move it to above the target
             var tgt = "U" + p.substr(1);
-            while (!eq(w.str, tgt)) { run("U"); w = state.find(p); }
+            while (!eq(w.str, tgt)) { run("U", true); }
             // if white is up, rotate and insert
             if (w.str[0] == "U") {
                 run(w.str[1]);
@@ -118,16 +119,38 @@ function solveFirstLayer(state) {
     return alg;
 }
 function solveSecondLayer(state) {
-    function run(x) { alg.push(x); state.algorithm(x); }
+    function run(x,u) { x.split(" ").forEach(function(y) {alg.push(y); state.algorithm(y);}); if (u) w = state.find(p); }
     var alg = [];
     var pieces = ["LF", "FR", "RB", "BL"];
     while (pieces.length > 0) {
         var p = pieces.shift(); // current piece
         var w = state.find(p) // where the piece was found
-
+        if (w.str == p) continue; // already ok
+        if (inLayer(w.str, "U")) {
+            console.log("piece",p,"is in upper layer");
+            function up() { return whichIs(p, w.str, "U"); }
+            function other() { return after(p, up()); }
+            var tgt = opposite(up());
+            // place the piece at the opposite side of the target
+            while (after(w.str, "U") != tgt) run("U", true);
+            if (p[0] == other()) sol = "F U F' U' L' U' L"; // for front, left
+            else sol = "L' U' L U F U F'"; // mirrorred
+            console.log("sol=",sol,"replacing L:",p[0], "and F:",p[1]);
+            console.log("final sol=",sol.replace("L", p[0]).replace("F", p[1]));
+            run(transform(sol, {"L":p[0], "F": p[1]}));
+        } else {
+            // move it out
+            console.log("moving out piece",p,w.str);
+            var a = w.str[0];
+            var b = w.str[1];
+            if (w.str[0] == right(w.str[1])) { a = w.str[1]; b = w.str[0]; }
+            run(transform("F U F' U' L' U' L", {"L":a, "F": b}));
+            pieces.unshift(p);
+        }
     }
     return alg;
 }
+
 function solveThirdLayer(state) {
 }
 
@@ -145,9 +168,6 @@ function right(faceChar) {
     return s[(s.indexOf(faceChar)+1)%4];
 }
 
-function edgeOther(piece, face) {
-    return piece.replace(face, "");
-}
 
 function eq(a, b) {
     function f(x) { return Array.from(x.toLowerCase()).sort().join(""); }
@@ -208,6 +228,11 @@ function rot(p, p2) {
     return i;
 }
 
+// returns the char at p of the same index as face at p2
+function whichIs(p, p2, face) {
+    return p[p2.indexOf(face)];
+}
+
 function opposite(face) {
     switch(face.toUpperCase()) {
         case "U": return "D";
@@ -227,6 +252,21 @@ function invertAlgorithm(alg) {
     var rev = arr.join(" ");
     console.log("alg=",alg,"rev=",rev);
     return rev;
+}
+
+function replaceAll(str, search, replacement) {
+    return str.replace(new RegExp(search, 'g'), replacement);
+};
+
+function transform(alg, map) {
+    var faces = Array.from("ULFRBD");
+    faces.forEach(function(c) { alg = replaceAll(alg, c, "_"+c); });
+    for (var x in map) {
+        if (!map.hasOwnProperty(x)) continue;
+        alg = replaceAll(alg, "_"+x, map[x]);
+    }
+    faces.forEach(function(c) { alg = replaceAll(alg, "_"+c, c); });
+    return alg;
 }
 
 module.exports = {
