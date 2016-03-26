@@ -5,9 +5,12 @@ This file implements the solver for a 3x3 Cube
 function solve(state, steps) {
     var alg = [];
     console.log("steps="+steps);
-    if (steps == undefined || --steps >= 0) alg = alg.concat(solveCenters(state));
-    if (steps == undefined || --steps >= 0) alg = alg.concat(solveCross(state));
-    if (steps == undefined || --steps >= 0) alg = alg.concat(solveFirstLayer(state));
+    if (steps == undefined || steps   > 0) alg = alg.concat(solveCenters(state));
+    if (steps == undefined || steps   > 0) alg = alg.concat(solveCross(state));
+    if (steps == undefined || steps-- > 0) alg = alg.concat(solveFirstLayer(state));
+
+    if (steps == undefined || steps-- > 0) alg = alg.concat(solveSecondLayer(state));
+
 
     var opt = optimize(alg.slice());
 
@@ -18,23 +21,23 @@ function solve(state, steps) {
 
 // We rotate the cube so that the white center is down and the red at the front
 function solveCenters(state) {
+    function run(x) { alg.push(x); state.algorithm(x); }
     var f = state.find("D").str;
     //console.log("white center is at: ", f);
     var alg = [];
     switch (f) {
-        case "L": alg.push("Z'"); break;
-        case "R": alg.push("Z"); break;
-        case "F": alg.push("X'"); break;
-        case "B": alg.push("X"); break;
-        case "U": alg.push("X"); alg.push("X"); break;
+        case "L": run("Z'"); break;
+        case "R": run("Z"); break;
+        case "F": run("X'"); break;
+        case "B": run("X"); break;
+        case "U": run("X"); run("X"); break;
     }
-    state.algorithm(alg.join(" "));
-    while (state.find("F").str != "F") { state.algorithm("Y"); alg.push("Y"); }
+    while (state.find("F").str != "F") { run("Y"); }
     return alg;
 }
 
 function solveCross(state) {
-    var run = function(x) { alg.push(x); state.algorithm(x); }
+    function run(x) { alg.push(x); state.algorithm(x); }
     var alg = [];
     var pieces = ["DL", "DF", "DR", "DB"];
     while (pieces.length > 0) {
@@ -67,22 +70,20 @@ function solveCross(state) {
             pieces.unshift(p);
         }
     }
-    console.log("returning",alg);
     return alg;
 }
 function solveFirstLayer(state) {
-    var run = function(x) { alg.push(x); state.algorithm(x); }
+    function run(x) { alg.push(x); state.algorithm(x); }
     var alg = [];
     var pieces = ["DLF", "DFR", "DRB", "DBL"];
     var crashCount = 0;
     while (pieces.length > 0 && crashCount++ < 20) {
         var p = pieces.shift(); // current piece
         var w = state.find(p) // where the piece was found
-        console.log("corner piece", p, "is at", w.str);
+        //console.log("corner piece", p, "is at", w.str);
         if (w.str == p) continue; // already ok
         if (inLayer(w.str, "U")) {
             // move it to above the target
-            console.log("moving "+p);
             var tgt = "U" + p.substr(1);
             while (!eq(w.str, tgt)) { run("U"); w = state.find(p); }
             // if white is up, rotate and insert
@@ -117,9 +118,9 @@ function solveFirstLayer(state) {
     return alg;
 }
 function solveSecondLayer(state) {
-    var run = function(x) { alg.push(x); state.algorithm(x); }
+    function run(x) { alg.push(x); state.algorithm(x); }
     var alg = [];
-    var pieces = ["DL", "DF", "DR", "DB"];
+    var pieces = ["LF", "FR", "RB", "BL"];
     while (pieces.length > 0) {
         var p = pieces.shift(); // current piece
         var w = state.find(p) // where the piece was found
@@ -205,6 +206,17 @@ function rot(p, p2) {
     var i = 0;
     while (p != p2) { rot(p); i++; }
     return i;
+}
+
+function opposite(face) {
+    switch(face.toUpperCase()) {
+        case "U": return "D";
+        case "D": return "U";
+        case "L": return "R";
+        case "R": return "L";
+        case "F": return "B";
+        case "B": return "F";
+    }
 }
 
 function invertAlgorithm(alg) {
