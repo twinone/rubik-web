@@ -3,6 +3,7 @@ This file implements the solver for a 3x3 Cube
 */
 
 function solve(state, steps) {
+    steps = 2;
     var alg = [];
     if (steps == undefined || steps   > 0) alg = alg.concat(solveCenters(state));
     if (steps == undefined || steps   > 0) alg = alg.concat(solveCross(state));
@@ -10,7 +11,7 @@ function solve(state, steps) {
 
     if (steps == undefined || steps-- > 0) alg = alg.concat(solveSecondLayer(state));
 
-    if (steps == undefined || steps-- > 0) alg = alg.concat(solveYellowCrossOrientation(state));
+    //if (steps == undefined || steps-- > 0) alg = alg.concat(solveYellowCrossOrientation(state));
 
 
     var opt = optimize(alg.slice());

@@ -60,11 +60,11 @@ State.prototype.index = function index(face, row, col) {
     return this.offset(face) + row*this.size + col;
 }
 
-State.prototype.row = function row(face, num = 0) {
+State.prototype.row = function row(face, num) {
     return this._line(face, true, num);
 }
 
-State.prototype.col = function col(face, num = 0) {
+State.prototype.col = function col(face, num) {
     return this._line(face, false, num);
 }
 
@@ -86,7 +86,8 @@ State.prototype._line = function _line(face, isRow, num) {
 /*
 Rotates layers around a face
 */
-State.prototype.rotate = function rotate(face, cw, layers = [0]) {
+State.prototype.rotate = function rotate(face, cw, layers) {
+    if (layers == undefined) layers = [0];
     for (var i = 0; i < layers.length; i++) {
         if (layers[i] == 0) this._rotateFace(face, cw);
         if (layers[i] == this.size-1) this._rotateFace(-face, !cw);
@@ -112,7 +113,7 @@ State.prototype._rotateFace = function _rotateFace(face, cw) {
     }
 }
 // Rotates the stickers on a layer
-State.prototype._rotateRing = function _rotateRing(face, layer = 0, cw) {
+State.prototype._rotateRing = function _rotateRing(face, layer, cw) {
     var lines = [];
     for (var i = 0; i < 4; i++) lines.push(this._getAdjacentLine(face, i, layer));
     for (var j = 0; j < this.size; j++) {

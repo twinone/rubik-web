@@ -112,7 +112,7 @@ uuuuuullllllffffffrrrrrrbbbbbbdddddd
 Where u means the "up" color.
 
 */
-Cube.prototype.getState = function getState(fancy = false) {
+Cube.prototype.getState = function getState(fancy) {
     var s = this.size;
     var faces = "";
     if (fancy) faces += "UP: ";
