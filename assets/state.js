@@ -225,15 +225,22 @@ State.prototype._findCorner = function _findCorner(stickers) {
     for (var i = 0; i < FACES.length; i++) {
         var f = FACES[i];
         for (var j = 0; j < 4; j++) {
-            if (this.state[this._getRotatedIndex(f, j, 0)] != stickers[0]) continue;
+            var index = this._getRotatedIndex(f, j, 0);
+            if (this.state[index] != stickers[0]) continue;
             var a = this._nextIndex(f, j, 0);
             var b = this._nextIndex(f, (j+3)%4, this.size-1);
             //console.log("check corner ", "a=",this.describeIndex(a), "b=",this.describeIndex(b));
             if (this.state[a] == stickers[1] && this.state[b] == stickers[2]) {
-                return faceArrayToString([f, ADJ[i][j], ADJ[i][(j+3)%4]]);
+                return {
+                    "str": faceArrayToString([f, ADJ[i][j], ADJ[i][(j+3)%4]]),
+                    "pos": [index, a, b],
+                };
             }
             if (this.state[b] == stickers[1] && this.state[a] == stickers[2]) {
-                return faceArrayToString([f, ADJ[i][(j+3)%4], ADJ[i][j]]);
+                return {
+                    "str": faceArrayToString([f, ADJ[i][(j+3)%4], ADJ[i][j]]),
+                    "pos": [index, b, a],
+                };
             }
         }
     }

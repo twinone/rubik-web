@@ -1,5 +1,6 @@
 var Cube = require("./cube").Cube;
 
+var solver = require("./solver");
 var defaults = require("./cube").defaults;
 var interpolation = require("./interpolation");
 
@@ -73,8 +74,11 @@ addListener('decrement-size-button', 'click', function() {
 addListener('scramble-button', 'click', function() {
     cube.scramble();
 });
+
+var solveCount = 0;
 addListener('solve-button', 'click', function() {
-    var alg = cube.getSolution();
+    console.log("solving " + (solveCount++) + " steps");
+    var alg = solver.solve(new State(cube.getState()), solveCount);
     console.log("Algorithm =",alg);
     //// option 1: apply the algorithm to the cube
     cube.algorithm(alg);
@@ -98,6 +102,9 @@ addListener('canvas', 'click', function() {
 
 addListener('run-algorithm', 'click', function() {
     cube.algorithm(document.getElementById('algorithm').value);
+});
+addListener('inverse', 'click', function() {
+    document.getElementById('algorithm').value = solver.invertAlgorithm(document.getElementById('algorithm').value);
 });
 
 addListener('change-state', 'click', function() {
