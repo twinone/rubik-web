@@ -147,12 +147,39 @@ function solveSecondLayer(state) {
 }
 
 function solveYellowCrossOrientation(state) {
-    function run(x,u) { x.split(" ").forEach(function(y) {alg.push(y); state.algorithm(y);}); if (u) w = state.find(p); }
+    function run(x,u) { x.split(" ").forEach(function(y) {alg.push(y); state.algorithm(y);}); if (u) find(); }
     var alg = [];
     var pieces = ["UL", "UF", "UR", "UB"];
-    var ups, line;
-    var stack = [];
-    state.get("UFL");
+    var w, up, cnt;
+    function find() {
+        w = []; up = []; cnt = 0;
+        for (var i = 0; i < 4; i++) {
+            w.push(state.get(pieces[i]));
+            up.push(w[i][0] == "U");
+            if (up[i]) cnt++;
+        }
+    }
+    find();
+    if (cnt == 0) {
+        run("F R U R' U' F'");
+        run("F R U R' U' F'");
+        run("U");
+        run("F R U R' U' F'");
+    } else if (cnt == 2) {
+
+        var h = up[0] && up[2];
+        var v = up[1] && up[3];
+        if (v) run("U");
+        if (h || v) run ("F R U R' U' F'");
+        else { // L shape
+            while (!(up[1] && up[2])) { console.log(up); run("U", true); }
+            run("F R U R' U' F'");
+            run("U");
+            run("F R U R' U' F'");
+        }
+    } else if (cnt != 4) {
+        throw new Error("Invalid state "+ cnt);
+    }
     return alg;
 }
 
