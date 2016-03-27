@@ -166,8 +166,20 @@ State.prototype._getEdge = function _getEdge(f) {
     return [this.state[i0], this.state[i1]];
 }
 
-State.prototype._getCorner = function _getCorner(faces) {
+State.prototype._getCorner = function _getCorner(f) {
+    function adj(x,y) { return ADJ[FACES.indexOf(f[x])].indexOf(f[y]); }
+    var r01 = adj(0, 1);
+    var r02 = adj(0, 2);
+    var r10 = adj(1, 0);
+    var r20 = adj(2, 0);
+
+    var cw = (r01 +1 == r02);
+    var i0 = this._getRotatedIndex(f[0], r01, cw ? this.size-1 : 0);
+    var i1 = this._getRotatedIndex(f[1], r10, cw ? 0 : this.size-1);
+    var i2 = this._getRotatedIndex(f[2], r20, cw ? this.size-1 : 0);
+    return [this.state[i0], this.state[i1], this.state[i2]];
 }
+
 // returns the faces in which the piece searched for is located
 // in the same order as the input
 // For example find(["U", "L"]) would return ["L", "U"]
