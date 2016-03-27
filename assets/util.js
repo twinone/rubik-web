@@ -161,6 +161,17 @@ function faceToColorString(face) {
     }
 }
 
+function opposite(face) {
+    switch(face.toUpperCase()) {
+        case "U": return "D";
+        case "D": return "U";
+        case "L": return "R";
+        case "R": return "L";
+        case "F": return "B";
+        case "B": return "F";
+    }
+}
+
 // http://stackoverflow.com/questions/5999118/add-or-update-query-string-parameter
 // https://gist.github.com/niyazpk/f8ac616f181f6042d1e0
 function appendQueryParameter(uri, key, value) {
@@ -226,4 +237,5 @@ module.exports = {
     appendQueryParameter: appendQueryParameter,
     getQueryParameter: getQueryParameter,
     copyToClipboard: copyToClipboard,
+    opposite: opposite,
 };
