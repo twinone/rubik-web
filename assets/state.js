@@ -1,15 +1,6 @@
 var model = require("./model");
 var util = require("./util");
 
-// The order in which faces are serialized
-var offsets = {};
-offsets["U"] = 0;
-offsets["L"] = 1;
-offsets["F"] = 2;
-offsets["R"] = 3;
-offsets["B"] = 4;
-offsets["D"] = 5;
-
 // Faces by their index
 var FACES = ["U", "L", "F", "R", "B", "D"];
 
@@ -32,13 +23,14 @@ var ADJ = [
 // The unit is 90º, so a value of 1 means we have to turn the face 90º so that
 // it aligns with the face of that line
 // values are [0..3]
+var _ = null;
 var ROT = [
-    [NaN,   3,   0,   1,   2, NaN], // U [U L F R B D]
-    [  1, NaN,   0, NaN,   0,   3], // L [U L F R B D]
-    [  0,   0, NaN,   0, NaN,   0], // F [U L F R B D]
-    [  3, NaN,   0, NaN,   0,   1], // R [U L F R B D]
-    [  2,   0, NaN,   0, NaN,   2], // B [U L F R B D]
-    [NaN,   1,   0,   3,   2, NaN], // D [U L F R B D]
+    [_, 3, 0, 1, 2, _], // U [ULFRBD]
+    [1, _, 0, _, 0, 3], // L [ULFRBD]
+    [0, 0, _, 0, _, 0], // F [ULFRBD]
+    [3, _, 0, _, 0, 1], // R [ULFRBD]
+    [2, 0, _, 0, _, 2], // B [ULFRBD]
+    [_, 1, 0, 3, 2, _], // D [ULFRBD]
 ];
 
 
@@ -51,7 +43,7 @@ function State(state) {
 }
 
 State.prototype.offset = function offset(face) {
-    return offsets[face] * this.size * this.size;
+    return FACES.indexOf(face) * this.size * this.size;
 }
 
 // index of a sticker inside the state
@@ -121,9 +113,9 @@ State.prototype._rotateRing = function _rotateRing(face, layer, cw) {
 }
 
 State.prototype._getAdjacentLine = function _getAdjacentLine(face, direction, layer) {
-    var index = offsets[face];
+    var index = FACES.indexOf(face);
     var dst = ADJ[index][direction]; // target face
-    var dsti = offsets[dst];
+    var dsti = FACES.indexOf(dst);
     var fdir = (ROT[index][dsti]+direction+2) % 4;
     return this._getRotatedLine(dst, fdir, layer).reverse();
 }
@@ -138,7 +130,7 @@ State.prototype._getRotatedLine = function _getRotatedLine(face, direction, laye
     }
 }
 
-// Gets the clockwise rotated line of a face
+// Gets the clockwise rotated index of a line on a face
 State.prototype._getRotatedIndex = function _getRotatedIndex(face, direction, offset) {
     var s = this.size;
     switch (direction) {
@@ -152,9 +144,29 @@ State.prototype._getRotatedIndex = function _getRotatedIndex(face, direction, of
 
 
 // TODO Add support for > 3x3 cubes
-// Returns whatever is at the intersecion of the faces
-State.prototype.get = function get(stickers) {
+// Returns whatever is at the intersecion of the faces, in the same order
+State.prototype.get = function get(faces) {
+    switch(faces.length) {
+        case 1: return this._getCenter(faces);
+        case 2: return this._getEdge(faces);
+        case 3: return this._getCorner(faces);
+        default: throw new Error("Invalid faces");
+    }
+}
 
+State.prototype._getCenter = function _getCenter(faces) {
+    return [this.index(faces, this.size/2, this.size/2)];
+}
+
+State.prototype._getEdge = function _getEdge(f) {
+    var r0 = ADJ[FACES.indexOf(f[0])].indexOf(f[1]);
+    var r1 = ADJ[FACES.indexOf(f[1])].indexOf(f[0]);
+    var i0 = this._getRotatedIndex(f[0], r0, 1);
+    var i1 = this._getRotatedIndex(f[1], r1, 1);
+    return [this.state[i0], this.state[i1]];
+}
+
+State.prototype._getCorner = function _getCorner(faces) {
 }
 // returns the faces in which the piece searched for is located
 // in the same order as the input
@@ -162,11 +174,12 @@ State.prototype.get = function get(stickers) {
 // if the UL edge was at the correct position but wrong orientation
 // stickers: Array of length [0..2] containing the stickers to search for
 State.prototype.find = function find(stickers) {
-    var l = stickers.length;
-    if (l < 1 || l > 3) throw new Error("Invalid search");
-    if (l == 1) return this._findCenter(stickers);
-    if (l == 2) return this._findEdge(stickers);
-    if (l == 3) return this._findCorner(stickers);
+    switch(stickers.length) {
+        case 1: return this._findCenter(stickers);
+        case 2: return this._findEdge(stickers);
+        case 3: return this._findCorner(stickers);
+        default: throw new Error("Invalid search");
+    }
 }
 
 // TODO Add support for > 3x3 cubes
@@ -189,9 +202,9 @@ State.prototype._findCenter = function _findCenter(stickers) {
 // Example: _next("U", size-1, 3) would give the sticker at Left(0,0)
 // Pre: Only valid to find stickers on two different faces
 State.prototype._nextIndex = function _nextIndex(face, dir, offset) {
-    var index = offsets[face];
+    var index = FACES.indexOf(face);
     var dst = ADJ[index][dir]; // target face
-    var dsti = offsets[dst];
+    var dsti = FACES.indexOf(dst);
     var fdir = (ROT[index][dsti]+dir+2) % 4;
 
     var s = this.size;
@@ -242,6 +255,8 @@ State.prototype._findCorner = function _findCorner(stickers) {
         }
     }
 }
+
+
 
 State.prototype.algorithm = function algorithm(alg) {
     //console.log("ALG:",alg);
@@ -295,25 +310,13 @@ State.prototype.describeIndex = function describeIndex(index) {
     return index + ":" + this.state[index] + " (f=" + f + ",r=" + row + ",c=" + col + ")";
 }
 
-function axisToFace(axis) {
-    switch(axis){
-        case "X": return "R";
-        case "Y": return "U";
-        case "Z": return "F";
-    }
-}
-
+function axisToFace(axis) { switch(axis){ case "X": return "R"; case "Y": return "U"; case "Z": return "F"; }}
 function isFace(char) { return FACES.indexOf(char) != -1; }
 function isAxis(char) { return "XYZ".indexOf(char) != -1; }
 function swap4(v, i0, i1, i2, i3, cw) { if (cw) swap4CW(v, i0, i1, i2, i3); else swap4CCW(v, i0, i1, i2, i3); }
 function swap4CCW(v, i0, i1, i2, i3) { swap4CW(v, i3, i2, i1, i0); }
-function swap4CW(v, i0, i1, i2, i3) {
-    tmp = v[i3];
-    v[i3] = v[i2];
-    v[i2] = v[i1];
-    v[i1] = v[i0];
-    v[i0] = tmp;
-}
+function swap4CW(v, i0, i1, i2, i3) { tmp = v[i3]; v[i3] = v[i2]; v[i2] = v[i1]; v[i1] = v[i0]; v[i0] = tmp; }
+
 
 
 module.exports = { State: State };

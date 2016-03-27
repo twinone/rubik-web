@@ -152,6 +152,8 @@ function solveYellowCrossOrientation(state) {
     var pieces = ["UL", "UF", "UR", "UB"];
     var ups, line;
     var stack = [];
+    state.get("UL");
+    return alg;
 }
 
 function inLayer(piece, layer) {
