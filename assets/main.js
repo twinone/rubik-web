@@ -7,6 +7,7 @@ var interpolation = require("./interpolation");
 var Face = require("./model").Face;
 var State = require("./state").State;
 var util = require("./util");
+var algorithm = require("./algorithm");
 
 
 var sel = document.getElementById('select-interpolator');
@@ -75,18 +76,10 @@ addListener('scramble-button', 'click', function() {
     cube.scramble();
 });
 
-var solveCount = 0;
 addListener('solve-button', 'click', function() {
-    console.log("solving " + (solveCount++) + " steps");
-    var alg = solver.solve(new State(cube.getState()), solveCount);
-    console.log("Algorithm =",alg);
-    //// option 1: apply the algorithm to the cube
+    var alg = solver.solve(new State(cube.getState()));
     cube.algorithm(alg);
-
-    //// option 2: apply the algorithm to state, and state to cube
-    // var s = new State(cube.getState());
-    // s.algorithm(alg);
-    // cube.setState(s.state.join(""));
+    console.log("Algorithm:", alg);
 });
 
 addListener('toggle-labels-button', 'click', function() {
@@ -118,13 +111,31 @@ addListener('copy-state', 'click', function() {
   //window.location.href = url;
 });
 
+var cnt = 0;
+var moves = [];
+var opts = [];
+function avg(w) {
+    var tot = 0;
+    for (var i = 0; i < w.length; i++) { tot += w[i]; }
+    return tot / w.length;
+}
+function benchmark() {
+    // results: benchmark solved 100000 states avg= 144.57862 optimized= 135.18556 in 81.055 s
+    var time = new Date().getTime();
+    for (var i = 0; i < 100000; i++) {
+      var state = new State(3);
+      state.algorithm(algorithm.random(10));
+      var alg = solver.solve(state);
+      var opt = algorithm.optimize(alg);
+      var m = alg.split(" ").length;
+      var o = opt.split(" ").length;
+      moves.push(m);
+      opts.push(o);
+      //if (i%10000==0)console.log("benchmark solved", cnt, "states avg=",avg(moves),"optimized=",avg(opts),"in",(new Date().getTime()-time)/1000,"s");
+      cnt++;
+    }
+    if (i%10000==0)console.log("benchmark solved", cnt, "states avg=",avg(moves),"optimized=",avg(opts),"in",(new Date().getTime()-time)/1000,"s");
+}
+
 addListener('test-button', 'click', function() {
-    // Test states
-  var state = new State(cube.getState());
-  var orig = state.state.join("");
-  // state.rotate(Face.UP, true, [1]);
-  state.algorithm(document.getElementById('algorithm').value);
-  console.log("ORIG=",orig);
-  console.log("NEW =",state.state.join(""));
-  cube.setState(state.state.join(""));
 });

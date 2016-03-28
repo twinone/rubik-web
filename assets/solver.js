@@ -2,28 +2,24 @@
 This file implements the solver for a 3x3 Cube
 */
 var util = require("./util");
+var algorithm = require("./algorithm");
 
-function solve(state, steps) {
-    steps = 2;
+function solve(state) {
+    //console.log("Solving", state.state.join(""));
     var alg = [];
-    if (steps == undefined || steps > 0) alg = alg.concat(solveCenters(state));
-    if (steps == undefined || steps > 0) alg = alg.concat(solveCross(state));
-    if (steps == undefined || steps > 0) alg = alg.concat(solveFirstLayer(state));
+    alg = alg.concat(solveCenters(state));
+    alg = alg.concat(solveCross(state));
+    alg = alg.concat(solveFirstLayer(state));
 
-    if (steps == undefined || steps > 0) alg = alg.concat(solveSecondLayer(state));
+    alg = alg.concat(solveSecondLayer(state));
 
-    if (steps == undefined || steps > 0) alg = alg.concat(solveYellowCrossOrientation(state));
-    if (steps == undefined || steps > 0) alg = alg.concat(solveYellowCrossPermutation(state));
+    alg = alg.concat(solveYellowCrossOrientation(state));
+    alg = alg.concat(solveYellowCrossPermutation(state));
 
-    if (steps == undefined || steps > 0) alg = alg.concat(solveCornersPermutation(state));
-    if (steps == undefined || steps > 0) alg = alg.concat(solveCornersOrientation(state));
+    alg = alg.concat(solveCornersPermutation(state));
+    alg = alg.concat(solveCornersOrientation(state));
 
-
-    var opt = optimize(alg.slice());
-
-    console.log("Original  algorithm ("+alg.length+"): " + alg.join(" "));
-    console.log("Optimized algorithm ("+opt.length+"): " + opt.join(" "));
-    return opt.join(" ");
+    return alg.join(" ");
 }
 
 // We rotate the cube so that the white center is down and the red at the front
@@ -45,12 +41,13 @@ function solveCenters(state) {
 function solveCross(state) {
     function run(x,u) { alg.push(x); state.algorithm(x); if (u) w = state.find(p); }
     var alg = [];
+    var i = 0;
     var pieces = ["DR","DL", "DF", "DR", "DB"];
-    while (pieces.length > 0) {
+    while (pieces.length > 0 && i < 10) {
         var p = pieces.shift(); // current piece
         var w = state.find(p); // where the piece was found
         if (inLayer(w.str, "U")) {
-            while (!inLayer(w.str, p[1])) { run("U", true); }
+            while (!inLayer(w.str, p[1]) && i < 10) { run("U", true); }
             var f = p[1];
             if (w.str[0] == "U") {
                 run(f);
@@ -67,7 +64,7 @@ function solveCross(state) {
             run(f+(cw?"":"'"));
             run("U");
             run(f+(!cw?"":"'"));
-            pieces.push(p);
+            pieces.unshift(p);
         } else if (w.str != p) {
             var f = after(w.str, "D");
             run(f);
@@ -95,7 +92,7 @@ function solveFirstLayer(state) {
                 run(w.str[1]);
                 run("U'");
                 run(inv(w.str[1]));
-                pieces.push(p);
+                pieces.unshift(p);
             } else if (w.str[2] == "U") { // if white is right (3rd color is up)
                 run(w.str[0]);
                 run("U");
@@ -137,13 +134,13 @@ function solveSecondLayer(state) {
             while (after(w.str, "U") != tgt) run("U", true);
             if (p[0] == other()) sol = "F U F' U' L' U' L"; // for front, left
             else sol = "L' U' L U F U F'"; // mirrorred
-            run(transform(sol, {"L":p[0], "F": p[1]}));
+            run(algorithm.transform(sol, {"L":p[0], "F": p[1]}));
         } else {
             // move it out
             var a = w.str[0];
             var b = w.str[1];
             if (w.str[0] == right(w.str[1])) { a = w.str[1]; b = w.str[0]; }
-            run(transform("F U F' U' L' U' L", {"L":a, "F": b}));
+            run(algorithm.transform("F U F' U' L' U' L", {"L":a, "F": b}));
             pieces.unshift(p);
         }
     }
@@ -176,7 +173,7 @@ function solveYellowCrossOrientation(state) {
         if (v) run("U");
         if (h || v) run ("F R U R' U' F'");
         else { // L shape
-            while (!(up[1] && up[2])) { console.log(up); run("U", true); }
+            while (!(up[1] && up[2])) { run("U", true); }
             run("F R U R' U' F'");
             run("U");
             run("F R U R' U' F'");
@@ -258,35 +255,6 @@ function eq(a, b) {
     return f(a) == f(b);
 }
 
-// copy of cube.optimizequeue
-// input as an array of moves
-function optimize(alg) {
-    var found = true;
-    while (found) {
-        found = false;
-        // remove opposite moves
-        for (var i = alg.length -2; i >= 0; i--) {
-            if (alg[i] == inv(alg[i+1])) {
-                found = true;
-                alg.splice(i, 2);
-                i--;
-            }
-        }
-        // remove 4 consecutive equal moves
-        for (var i = alg.length -3; i >= 0; i--) {
-            if (alg[i] == alg[i+1] &&
-                alg[i+1] == alg[i+2]
-            ) {
-                found = true;
-                alg[i] = inv(alg[i]);
-                alg.splice(i+1, 2);
-                i--;
-            }
-        }
-
-    }
-    return alg;
-};
 
 function inv(move) {
     if (move.slice(-1) == "'") return move.substr(0,move.length-1);
@@ -317,31 +285,6 @@ function whichIs(p, p2, face) {
     return p[p2.indexOf(face)];
 }
 
-function invertAlgorithm(alg) {
-    var arr = alg.split(" ").reverse();
-    arr.forEach(function(e, i, a) {
-        a[i] = inv(e);
-    });
-    var rev = arr.join(" ");
-    return rev;
-}
-
-function replaceAll(str, search, replacement) {
-    return str.replace(new RegExp(search, 'g'), replacement);
-};
-
-function transform(alg, map) {
-    var faces = Array.from("ULFRBD");
-    faces.forEach(function(c) { alg = replaceAll(alg, c, "_"+c); });
-    for (var x in map) {
-        if (!map.hasOwnProperty(x)) continue;
-        alg = replaceAll(alg, "_"+x, map[x]);
-    }
-    faces.forEach(function(c) { alg = replaceAll(alg, "_"+c, c); });
-    return alg;
-}
-
 module.exports = {
     solve: solve,
-    invertAlgorithm: invertAlgorithm,
 };

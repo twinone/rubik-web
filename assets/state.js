@@ -35,6 +35,11 @@ var ROT = [
 
 
 function State(state) {
+    if (typeof(state) == "number") {
+        var s = "";
+        for (var i = 0; i < FACES.length; i++) for (var j = 0; j < state*state; j++) s += FACES[i];
+        state = s;
+    }
     if (typeof(state) !== "string") throw new Error("State should be a string!");
     if (state.length % 6 != 0) throw new Error("State's length must be a multiple of 6");
     this.size = Math.sqrt(state.length / 6);
@@ -278,7 +283,7 @@ State.prototype.algorithm = function algorithm(alg) {
         if (move == "") continue;
         var p = 0;
         var c = move.charAt(p++);
-        var face = c;
+        var face = c.toUpperCase();
         var axis = c;
         var cw = true;
         var upper = (c == c.toUpperCase()); // uppercase letter is clockwise
@@ -328,7 +333,5 @@ function isAxis(char) { return "XYZ".indexOf(char) != -1; }
 function swap4(v, i0, i1, i2, i3, cw) { if (cw) swap4CW(v, i0, i1, i2, i3); else swap4CCW(v, i0, i1, i2, i3); }
 function swap4CCW(v, i0, i1, i2, i3) { swap4CW(v, i3, i2, i1, i0); }
 function swap4CW(v, i0, i1, i2, i3) { tmp = v[i3]; v[i3] = v[i2]; v[i2] = v[i1]; v[i1] = v[i0]; v[i0] = tmp; }
-
-
 
 module.exports = { State: State };
