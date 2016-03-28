@@ -155,7 +155,7 @@ State.prototype.get = function get(faces) {
 }
 
 State.prototype._getCenter = function _getCenter(faces) {
-    return [this.index(faces, this.size/2, this.size/2)];
+    return this.index(faces, this.size/2, this.size/2);
 }
 
 State.prototype._getEdge = function _getEdge(f) {
@@ -163,7 +163,7 @@ State.prototype._getEdge = function _getEdge(f) {
     var r1 = ADJ[FACES.indexOf(f[1])].indexOf(f[0]);
     var i0 = this._getRotatedIndex(f[0], r0, 1);
     var i1 = this._getRotatedIndex(f[1], r1, 1);
-    return [this.state[i0], this.state[i1]];
+    return this.state[i0] + this.state[i1];
 }
 
 State.prototype._getCorner = function _getCorner(f) {
@@ -177,7 +177,7 @@ State.prototype._getCorner = function _getCorner(f) {
     var i0 = this._getRotatedIndex(f[0], r01, cw ? this.size-1 : 0);
     var i1 = this._getRotatedIndex(f[1], r10, cw ? 0 : this.size-1);
     var i2 = this._getRotatedIndex(f[2], r20, cw ? this.size-1 : 0);
-    return [this.state[i0], this.state[i1], this.state[i2]];
+    return this.state[i0] + this.state[i1] + this.state[i2];
 }
 
 // returns the faces in which the piece searched for is located

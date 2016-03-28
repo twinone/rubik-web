@@ -6,13 +6,17 @@ var util = require("./util");
 function solve(state, steps) {
     steps = 2;
     var alg = [];
-    if (steps == undefined || steps   > 0) alg = alg.concat(solveCenters(state));
-    if (steps == undefined || steps   > 0) alg = alg.concat(solveCross(state));
-    if (steps == undefined || steps   > 0) alg = alg.concat(solveFirstLayer(state));
+    if (steps == undefined || steps > 0) alg = alg.concat(solveCenters(state));
+    if (steps == undefined || steps > 0) alg = alg.concat(solveCross(state));
+    if (steps == undefined || steps > 0) alg = alg.concat(solveFirstLayer(state));
 
-    if (steps == undefined || steps-- > 0) alg = alg.concat(solveSecondLayer(state));
+    if (steps == undefined || steps > 0) alg = alg.concat(solveSecondLayer(state));
 
-    if (steps == undefined || steps-- > 0) alg = alg.concat(solveYellowCrossOrientation(state));
+    if (steps == undefined || steps > 0) alg = alg.concat(solveYellowCrossOrientation(state));
+    if (steps == undefined || steps > 0) alg = alg.concat(solveYellowCrossPermutation(state));
+
+    if (steps == undefined || steps > 0) alg = alg.concat(solveCornersPermutation(state));
+    if (steps == undefined || steps > 0) alg = alg.concat(solveCornersOrientation(state));
 
 
     var opt = optimize(alg.slice());
@@ -180,6 +184,32 @@ function solveYellowCrossOrientation(state) {
     } else if (cnt != 4) {
         throw new Error("Invalid state "+ cnt);
     }
+    return alg;
+}
+
+function solveYellowCrossPermutation(state) {
+    function run(x,u) { x.split(" ").forEach(function(y) {alg.push(y); state.algorithm(y);}); }
+    function g(x) { return state.get(x); }
+    var alg = [];
+    var pieces = ["UL", "UF", "UR", "UB"];
+    while (g("UF") != "UF") run("U");
+
+    if (g("UL") == "UL" && g("UF") == "UF" && g("UR") == "UR" && g("UB") == "UB") {} // already solved
+    else if (g("UB") == "UL" && g("UL") == "UB") run("R' U' R U' R' U U R U'"); // L <=> B
+    else if (g("UB") == "UR" && g("UR") == "UB") run("L U L' U L U U L' U"); // R <=> B
+    else if (g("UB") == "UB") run("R' U' R U' R' U U R U'" + " " + "L' U' L U' L' U U L"); // v swap
+    else if (g("UL") == "UB") run("L' U' L U' L' U U L"); // cw
+    else run("R U R' U R U U R'"); // ccw
+    return alg;
+}
+
+function solveCornersPermutation(state) {
+    var alg = [];
+    return alg;
+}
+
+function solveCornersOrientation(state) {
+    var alg = [];
     return alg;
 }
 
