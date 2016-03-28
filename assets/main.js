@@ -78,7 +78,8 @@ addListener('scramble-button', 'click', function() {
 
 addListener('solve-button', 'click', function() {
     var alg = solver.solve(new State(cube.getState()));
-    cube.algorithm(alg);
+    var opt = algorithm.optimize(alg);
+    cube.algorithm(opt);
     console.log("Algorithm:", alg);
 });
 
