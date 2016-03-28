@@ -194,22 +194,47 @@ function solveYellowCrossPermutation(state) {
     var pieces = ["UL", "UF", "UR", "UB"];
     while (g("UF") != "UF") run("U");
 
-    if (g("UL") == "UL" && g("UF") == "UF" && g("UR") == "UR" && g("UB") == "UB") {} // already solved
-    else if (g("UB") == "UL" && g("UL") == "UB") run("R' U' R U' R' U U R U'"); // L <=> B
-    else if (g("UB") == "UR" && g("UR") == "UB") run("L U L' U L U U L' U"); // R <=> B
-    else if (g("UB") == "UB") run("R' U' R U' R' U U R U'" + " " + "L' U' L U' L' U U L"); // v swap
-    else if (g("UL") == "UB") run("L' U' L U' L' U U L"); // cw
-    else run("R U R' U R U U R'"); // ccw
+    if (!(g("UL") == "UL" && g("UF") == "UF" && g("UR") == "UR" && g("UB") == "UB")) {
+        if      (g("UB") == "UL" && g("UL") == "UB") run("R' U' R U' R' U U R U'"); // L <=> B
+        else if (g("UB") == "UR" && g("UR") == "UB") run("L U L' U L U U L' U"); // R <=> B
+        else if (g("UB") == "UB")                    run("R' U' R U' R' U U R U'" + " " + "L' U' L U' L' U U L"); // v swap
+        else if (g("UL") == "UB")                    run("L' U' L U' L' U U L"); // cw
+        else                                         run("R U R' U R U U R'"); // ccw
+    }
+
     return alg;
 }
 
 function solveCornersPermutation(state) {
+    var niklas_ccw =  "R U' L' U R' U' L U";
+    var niklas_cw = "L' U R U' L U R' U'";
+    function run(x,u) { x.split(" ").forEach(function(y) {alg.push(y); state.algorithm(y);}); }
     var alg = [];
+    // First put the UFL corner at it's correct position
+    var ufl = state.find("UFL");
+    if (!eq(ufl.str, "UFL")) {
+        if      (eq(ufl.str, "UBL")) { run("Y"); run(niklas_ccw); run("Y'"); }
+        else if (eq(ufl.str, "URB")) { run(niklas_cw); }
+        else                         { run("Y"); run(niklas_cw); run("Y'") }
+    }
+    // now rotate the other 3 pieces
+    var ulb = state.find("ULB");
+    if (!eq(ulb.str, "ULB")) {
+        if (eq(ulb.str, "UBR")) { run(niklas_ccw); }
+        else                    { run("Y'"); run(niklas_cw); run("Y"); }
+    }
     return alg;
 }
 
 function solveCornersOrientation(state) {
+    function run(x,u) { x.split(" ").forEach(function(y) {alg.push(y); state.algorithm(y);}); }
     var alg = [];
+    for (var i = 0; i < 4; i++) {
+        var rot = state.get("URF").indexOf("U");
+        if (rot == 1) run("R' D' R D R' D' R D");
+        if (rot == 2) run("D' R' D R D' R' D R");
+        run("U");
+    }
     return alg;
 }
 
