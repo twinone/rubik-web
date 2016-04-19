@@ -98,7 +98,7 @@ addListener('run-algorithm', 'click', function() {
     cube.algorithm(document.getElementById('algorithm').value);
 });
 addListener('inverse', 'click', function() {
-    document.getElementById('algorithm').value = solver.invertAlgorithm(document.getElementById('algorithm').value);
+    document.getElementById('algorithm').value = algorithm.invert(document.getElementById('algorithm').value);
 });
 
 addListener('change-state', 'click', function() {
