@@ -42,7 +42,7 @@ function solveCross(state) {
     function run(x,u) { alg.push(x); state.algorithm(x); if (u) w = state.find(p); }
     var alg = [];
     var i = 0;
-    var pieces = ["DR","DL", "DF", "DR", "DB"];
+    var pieces = ["DR","DL", "DF", "DB"];
     while (pieces.length > 0 && i < 10) {
         var p = pieces.shift(); // current piece
         var w = state.find(p); // where the piece was found
