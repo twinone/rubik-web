@@ -82,7 +82,10 @@ function Cube(options) {
 
     this.mouse = {
         x: 0,
-        y: 0
+        y: 0,
+        origX: 0,
+        origY: 0,
+        hasMoved: false,
     }
 
     this.wireframe = defaults.wireframe;
@@ -177,13 +180,8 @@ Cube.prototype.resetCamera = function resetCamera() {
     this.controls.center.set(0,0,0);
 };
 
-Cube.prototype._performRaycast = function _performRaycast(e) {
+Cube.prototype._performRaycast = function _performRaycast() {
     if (this.anim.animating) { console.log("not raycasting while animating!"); return; }
-
-    // update the mouse position
-    // update the mouse variable
-    this.mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-    this.mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
 
     // create a Ray with origin at the mouse position
     // and direction into the scene (camera direction)
@@ -382,9 +380,32 @@ Cube.prototype._init = function _init() {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
 
     this.onMouseDownListener = function onMouseDownListener(e) {
-        self._performRaycast(e);
+        // update the mouse position
+        self.mouse.x = self.mouse.origX = (e.clientX / window.innerWidth) * 2 - 1;
+        self.mouse.y = self.mouse.origY = -(e.clientY / window.innerHeight) * 2 + 1;
+
+        self.mouse.hasMoved = false;
     }
+    self.onMouseMoveListener = function onMouseMoveListener(e) {
+        // update the mouse position
+        self.mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+        self.mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+        self.mouse.hasMoved = true;
+    }
+    self.onMouseUpListener = function onMouseUpListener(e) {
+        // update the mouse position
+        self.mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+        self.mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+        if (!self.mouse.hasMoved) {
+          self._performRaycast();
+        }
+    }
+
     this.renderer.domElement.addEventListener('mousedown', this.onMouseDownListener);
+    this.renderer.domElement.addEventListener('mousemove', this.onMouseMoveListener);
+    this.renderer.domElement.addEventListener('mouseup', this.onMouseUpListener);
 
     this.keyPressListener = function(e) {
         self._onKeyPress(e);
