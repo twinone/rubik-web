@@ -39,7 +39,7 @@ function Cube(options) {
     this.camera = null;
     this.clock = new THREE.Clock();
     this.canvas = document.getElementById("canvas");
-    this.renderer = new THREE.WebGLRenderer({ canvas: canvas });
+    this.renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, });
 
     this.animationFrameId = null;
 
@@ -356,7 +356,7 @@ Cube.prototype._init = function _init() {
     }
     window.addEventListener('resize', this.resizeListener);
 
-    this.renderer.setClearColor(this.colors.background);
+    this.renderer.setClearColor(0,0);
     this.renderer.setSize(window.innerWidth, window.innerHeight);
 
     this.active = new THREE.Object3D();
