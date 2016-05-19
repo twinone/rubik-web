@@ -69,6 +69,8 @@ function initGui() {
   alg.add(controls, "button").name("Invert")
     .onFinishChange(function() { controls.alg = algorithm.invert(controls.alg); });
 
+  if (screen.width <= 500) gui.close();
+
 }
 
 initGui();

@@ -23,6 +23,20 @@ function swap4CW(mat, x1,y1,z1, x2,y2,z2, x3,y3,z3, x4,y4,z4) {
     mat[x1][y1][z1] = tmp;
 }
 
+// http://threejs.org/docs/#Reference/Renderers/CanvasRenderer
+function webglAvailable() {
+	try {
+		var canvas = document.createElement( 'canvas' );
+		return !!( window.WebGLRenderingContext && (
+			canvas.getContext( 'webgl' ) ||
+			canvas.getContext( 'experimental-webgl' ) )
+		);
+	} catch ( e ) {
+		return false;
+	}
+}
+
+
 
 
 function rotateLayer(mat, axis, layer, cw) {
@@ -238,4 +252,5 @@ module.exports = {
     getQueryParameter: getQueryParameter,
     copyToClipboard: copyToClipboard,
     opposite: opposite,
+    webglAvailable: webglAvailable,
 };

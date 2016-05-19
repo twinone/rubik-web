@@ -39,8 +39,12 @@ function Cube(options) {
     this.camera = null;
     this.clock = new THREE.Clock();
     this.canvas = document.getElementById("canvas");
-    this.renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, });
-
+    var o = { canvas: canvas, alpha: true, };
+    if (util.webglAvailable()) {
+      this.renderer = new THREE.WebGLRenderer(o);
+    } else  {
+      this.renderer = new THREE.CanvasRenderer(o)
+    }
     this.animationFrameId = null;
 
     this.size = options.size || defaults.size;
