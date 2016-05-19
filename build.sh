@@ -6,6 +6,7 @@ git checkout gh-pages
 
 git checkout $branch assets
 git checkout $branch index.html
+git checkout $branch img
 
 cd assets
 NODE_ENV=production webpack
@@ -13,7 +14,7 @@ cd ..
 
 rm -rf assets
 git rm -r assets 2>&1 > /dev/null
-git add -f build index.html
+git add -f build index.html img
 
 git commit -m "Automated build ($commit)"
 
