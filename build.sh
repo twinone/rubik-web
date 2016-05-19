@@ -4,8 +4,8 @@ branch=$(git symbolic-ref --short -q HEAD)
 commit=$(git rev-parse HEAD)
 git checkout gh-pages
 
-git checkout master assets
-git checkout master index.html
+git checkout $branch assets
+git checkout $branch index.html
 
 cd assets
 NODE_ENV=production webpack
@@ -17,6 +17,8 @@ git add -f build index.html
 
 git commit -m "Automated build ($commit)"
 
-if [ "$1" != "--no-push" ]; then git push origin gh-pages; fi
+if [[ "$1" -eq "--push" ]]; then
+	git push origin gh-pages;
+	git checkout $branch
+fi
 
-git checkout $branch
