@@ -85,7 +85,7 @@ var cube = new Cube({
 });
 
 controls.state = util.getQueryParameter("state");
-if (controls.state) cube.setState(state);
+if (controls.state) cube.setState(controls.state);
 else controls.state = cube.getState();
 
 function moveCompleteListener() {

@@ -207,16 +207,18 @@ Cube.prototype._performRaycast = function _performRaycast(e) {
         // probably yes, since we only ask for intersection with cubies
         if (!elem.object.hasOwnProperty("coords")) { console.log("Intersected with non-cubie"); return; }
 
-        this._onCubieClick(elem.object, elem.object.coords, elem.face.normal);
+        this._onCubieClick(elem.object,
+          elem.object.coords.clone(),
+          elem.face.normal.clone());
     }
 }
 
 Cube.prototype._onCubieClick = function _onCubieClick(cubie, coords, direction) {
-    //    console.log("click pos=("+ coords.x + "," + coords.y + "," + coords.z + "), " +
-    //                "normal=("   + direction.x + "," + direction.y + "," + direction.z + ")");
-    //    console.log(cubie);
+    var norm = new THREE.Matrix3().getNormalMatrix(cubie.matrixWorld);
+    direction.applyMatrix3(norm);
 
-    var face = direction; // local coords...
+    console.log("direction:", direction);
+
     console.log(
         (cubie.getSticker(Face.RIGHT) ? "(R: "+util.faceToColorString(cubie.getSticker(Face.RIGHT))+") - " : "") +
         (cubie.getSticker(Face.LEFT) ? "(L: "+util.faceToColorString(cubie.getSticker(Face.LEFT))+") - " : "") +
@@ -225,6 +227,10 @@ Cube.prototype._onCubieClick = function _onCubieClick(cubie, coords, direction) 
         (cubie.getSticker(Face.UP) ? "(U: "+util.faceToColorString(cubie.getSticker(Face.UP))+") - " : "") +
         (cubie.getSticker(Face.DOWN) ? "(D: "+util.faceToColorString(cubie.getSticker(Face.DOWN))+")" : "")
     );
+
+    var face = util.faceToChar(util.axisToFace(direction));
+    console.log("Clicked on face", face);
+    this.algorithm(face);
 }
 
 Cube.prototype.scramble = function scramble(num) {
