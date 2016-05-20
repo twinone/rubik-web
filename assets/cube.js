@@ -6,6 +6,7 @@ var util = require("./util");
 require("./vendor/helvetiker.min.js");
 require("./vendor/projector.js");
 var Cubie = require("./cubie").Cubie;
+var algorithm = require("./algorithm");
 
 var state = require("./state");
 var solver = require("./solver");
@@ -86,6 +87,8 @@ function Cube(options) {
         origX: 0,
         origY: 0,
         hasMoved: false,
+        down: false,
+        timeout: undefined,
     }
 
     this.wireframe = defaults.wireframe;
@@ -205,9 +208,18 @@ Cube.prototype._performRaycast = function _performRaycast() {
         // probably yes, since we only ask for intersection with cubies
         if (!elem.object.hasOwnProperty("coords")) { console.log("Intersected with non-cubie"); return; }
 
-        this._onCubieClick(elem.object,
-          elem.object.coords.clone(),
-          elem.face.normal.clone());
+        var norm = new THREE.Matrix3().getNormalMatrix(elem.object.matrixWorld);
+        var dir = elem.face.normal.clone().applyMatrix3(norm);
+
+        var face = util.faceToChar(util.axisToFace(dir));
+        console.log("Clicked on face", face);
+        //this.algorithm(face);
+
+        return face;
+
+        // this._onCubieClick(elem.object,
+        //   elem.object.coords.clone(),
+        //   elem.face.normal.clone());
     }
 }
 
@@ -385,22 +397,42 @@ Cube.prototype._init = function _init() {
         self.mouse.y = self.mouse.origY = -(e.clientY / window.innerHeight) * 2 + 1;
 
         self.mouse.hasMoved = false;
+        self.mouse.down = true;
+
+        self.mouse.timeout = setTimeout(function() {
+          if (!self.mouse.hasMoved) {
+            var face = self._performRaycast();
+            if (face !== undefined) self.algorithm(algorithm.invert(face));
+          }
+
+          self.mouse.down = false;
+        }, 400);
     }
     self.onMouseMoveListener = function onMouseMoveListener(e) {
+        if (!self.mouse.down) return;
         // update the mouse position
         self.mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
         self.mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
 
-        self.mouse.hasMoved = true;
+        var dx = self.mouse.x - self.mouse.origX;
+        var dy = self.mouse.y - self.mouse.origY;
+        var dst = Math.sqrt(dx*dx + dy*dy);
+        console.log("moved: ",dst);
+        self.mouse.hasMoved = dst > 1./50;
     }
     self.onMouseUpListener = function onMouseUpListener(e) {
+        if (!self.mouse.down) return; // ignore if already processed by the timeout
         // update the mouse position
         self.mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
         self.mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
 
         if (!self.mouse.hasMoved) {
-          self._performRaycast();
+          var face = self._performRaycast();
+          if (face !== undefined) self.algorithm(face);
         }
+
+        clearTimeout(self.mouse.timeout);
+        self.mouse.down = false;
     }
 
     this.renderer.domElement.addEventListener('mousedown', this.onMouseDownListener);
