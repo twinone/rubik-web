@@ -3,8 +3,9 @@ var orbitcontrols = require("./orbitcontrols");
 var OrbitControls = orbitcontrols.OrbitControls;
 var sceneutils = require("./vendor/sceneutils");
 var util = require("./util");
-require("./vendor/helvetiker.min.js");
+//require("./vendor/helvetiker.min.js");
 require("./vendor/projector.js");
+var helvetiker = require("./vendor/helvetiker");
 var Cubie = require("./cubie").Cubie;
 var algorithm = require("./algorithm");
 
@@ -417,7 +418,6 @@ Cube.prototype._init = function _init() {
         var dx = self.mouse.x - self.mouse.origX;
         var dy = self.mouse.y - self.mouse.origY;
         var dst = Math.sqrt(dx*dx + dy*dy);
-        console.log("moved: ",dst);
         self.mouse.hasMoved = dst > 1./50;
     }
     self.onMouseUpListener = function onMouseUpListener(e) {
@@ -523,17 +523,24 @@ Cube.prototype.showLabels = function showLabels() {
     this.labels = new THREE.Object3D();
     var pos = this.width()/2 + this.labelMargin * this.cubieWidth * this.size;
     var s = this.width() / 5;
-    for (var i = 0; i < faces.length; i++) {
-        var face = faces[i];
-        var shape = THREE.FontUtils.generateShapes(util.faceToChar(face), {size: s});
-        var geo = new THREE.ShapeGeometry(shape);
-        var m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: this.colors.label }));
-        m.position.copy(util.faceToAxis(face)).multiplyScalar(pos);
 
-        this.labels.add(m);
-    }
-    this.scene.add(this.labels);
-    this.shouldShowLabels = true;
+    var font = new THREE.Font(helvetiker);
+      for (var i = 0; i < faces.length; i++) {
+          //var shape = THREE.FontUtils.generateShapes(util.faceToChar(face), {size: s});
+          //var geo = new THREE.ShapeGeometry(shape);
+          var geo = new THREE.TextGeometry(util.faceToChar(faces[i]), {
+            font: font,
+            size: s,
+            height: 1,
+          });
+
+          var m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: this.colors.label }));
+          m.position.copy(util.faceToAxis(faces[i])).multiplyScalar(pos);
+
+          this.labels.add(m);
+      }
+      this.scene.add(this.labels);
+      this.shouldShowLabels = true;
 };
 
 Cube.prototype.hideLabels = function hideLabels() {
