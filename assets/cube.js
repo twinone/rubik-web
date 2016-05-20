@@ -62,6 +62,8 @@ function Cube(options) {
     this.active = null; // init
     this.labels = null;
 
+    this.dclick = (options.dclick != undefined) ? options.dclick : defaults.dclick;
+
     this.shouldShowLabels = (options.showLabels != undefined) ? options.showLabels : defaults.showLabels;
     this.shouldOptimizeQueue = true;
 
@@ -401,7 +403,7 @@ Cube.prototype._init = function _init() {
         self.mouse.down = true;
 
         self.mouse.timeout = setTimeout(function() {
-          if (!self.mouse.hasMoved) {
+          if (!self.mouse.hasMoved && self.dclick) {
             var face = self._performRaycast();
             if (face !== undefined) self.algorithm(algorithm.invert(face));
           }
