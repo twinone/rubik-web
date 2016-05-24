@@ -80,7 +80,7 @@ var size = Number(size);
 
 var cube = new Cube({
     size : size,
-    showLabels: true,
+    showLabels: false,
     moveCompleteListener: moveCompleteListener,
 });
 
@@ -141,3 +141,5 @@ function solve() {
 //     }
 //     if (i%10000==0)console.log("benchmark solved", cnt, "states avg=",avg(moves),"optimized=",avg(opts),"in",(new Date().getTime()-time)/1000,"s");
 // }
+
+module.exports = cube;

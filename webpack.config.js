@@ -1,15 +1,17 @@
 var env = process.env["NODE_ENV"];
 var webpack = require("webpack");
 
+var assets = "./assets";
 var config = {
-    entry: "./main",
+    entry: assets + "/main",
     output: {
-        path: __dirname + "/../build",
+        path: __dirname + "/build",
         filename: "bundle.js"
     },
     module: {
         loaders: [
-            { test: /\.css$/, loader: "style!css" }
+            { test: /assets\/\.css$/, loader: "style!css" },
+            { test: /assets\/\main.js$/, loader: 'expose?cube' }
         ]
     },
     plugins: [
