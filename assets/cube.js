@@ -3,7 +3,6 @@ var orbitcontrols = require("./orbitcontrols");
 var OrbitControls = orbitcontrols.OrbitControls;
 var sceneutils = require("./vendor/sceneutils");
 var util = require("./util");
-//require("./vendor/helvetiker.min.js");
 require("./vendor/projector.js");
 var helvetiker = require("./vendor/helvetiker");
 var Cubie = require("./cubie").Cubie;
@@ -45,7 +44,7 @@ function Cube(options) {
     if (util.webglAvailable()) {
       this.renderer = new THREE.WebGLRenderer(o);
     } else  {
-      this.renderer = new THREE.CanvasRenderer(o)
+      //this.renderer = new THREE.CanvasRenderer(o)
     }
     this.animationFrameId = null;
 

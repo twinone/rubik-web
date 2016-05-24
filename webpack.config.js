@@ -1,6 +1,7 @@
 var env = process.env["NODE_ENV"];
 var webpack = require("webpack");
 
+
 var assets = "./assets";
 var config = {
     entry: assets + "/main",
