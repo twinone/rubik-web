@@ -423,4 +423,4 @@
     this.Cube = Cube;
   }
 
-}).call(Lib);
+}).call(this);

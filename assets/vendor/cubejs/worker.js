@@ -46,4 +46,4 @@
     }
   };
 
-}).call(Lib);
+}).call(this);

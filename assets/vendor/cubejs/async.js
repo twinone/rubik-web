@@ -80,4 +80,4 @@
     Cube.prototype[key] = value;
   }
 
-}).call(Lib);
+}).call(this);
