@@ -32,14 +32,14 @@ var ROTATION_MATRIX = [
     [Face.FRONT, Face.RIGHT,  Face.BACK,   Face.LEFT], // Z
 ];
 
-function Cube(options) {
+function Cube(canvas, options) {
     if (!options)
     options = {};
     this.dt = 0,
     this.scene = null;
     this.camera = null;
     this.clock = new THREE.Clock();
-    this.canvas = document.getElementById("canvas");
+    this.canvas = canvas;
     var o = { canvas: canvas, alpha: true, };
     if (util.webglAvailable()) {
       this.renderer = new THREE.WebGLRenderer(o);
@@ -63,7 +63,7 @@ function Cube(options) {
 
     this.dclick = (options.dclick != undefined) ? options.dclick : defaults.dclick;
 
-    this.shouldShowLabels = (options.showLabels != undefined) ? options.showLabels : defaults.showLabels;
+    this.shouldShowLabels = (options.showLabels !== undefined) ? options.showLabels : defaults.showLabels;
     this.shouldOptimizeQueue = true;
 
     this.anim = Object.create(defaults.animation);
@@ -96,6 +96,7 @@ function Cube(options) {
     this.wireframe = defaults.wireframe;
 
     this.init();
+    if (options.state) this.setState(options.state);
 };
 
 Cube.prototype.isAnimating = function isAnimating() { return this.anim.animating; }
@@ -514,9 +515,9 @@ Cube.prototype._updateLabelOrientation = function _updateLabelOrientation() {
     }
 };
 
-Cube.prototype.toggleLabels = function toggleLabels() {
-    if (this.labels) this.hideLabels();
-    else this.showLabels();
+Cube.prototype.setLabels = function setLabels(labelsVisible) {
+    if (labelsVisible) this.showLabels();
+    else this.hideLabels();
 };
 
 Cube.prototype.showLabels = function showLabels() {
