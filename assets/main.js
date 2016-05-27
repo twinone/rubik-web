@@ -96,3 +96,5 @@ function solve() {
   cube.algorithm(opt);
   console.log("Algorithm:", alg);
 }
+
+module.exports = cube;
