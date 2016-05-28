@@ -52,7 +52,7 @@ function initGui() {
     .onChange(function() { solve(); });
 
   var v = folder("View");
-  v.add(controls, 'labels').name("Show Labels")
+  v.add(controls, 'labels').name("Show Labels").listen()
     .onFinishChange(function(v) { cube.setLabels(v); });
   v.add(controls, 'camera').name("Reset Camera")
     .onFinishChange(function() { cube.resetCamera(); });
@@ -76,7 +76,7 @@ function initGui() {
   alg.add(controls, "button").name("Invert")
     .onFinishChange(function() { controls.alg = algorithm.invert(controls.alg); });
 
-  if (screen.width <= 500) gui.close();
+  if (window.innerWidth <= 500) gui.close();
 
   function folder(name) {
     var f = gui.addFolder(name);
