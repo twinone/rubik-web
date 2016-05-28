@@ -61,7 +61,9 @@ function Cube(canvas, options) {
     this.active = null; // init
     this.labels = null;
 
-    this.dclick = (options.dclick != undefined) ? options.dclick : defaults.dclick;
+    this.click = (options.click !== undefined) ? options.click : defaults.click;
+    this.longClick = (options.longClick !== undefined) ? options.longClick : defaults.longClick;
+    this.longClickDelay = options.longClickDelay || defaults.longClickDelay;
 
     this.shouldShowLabels = (options.showLabels !== undefined) ? options.showLabels : defaults.showLabels;
     this.shouldOptimizeQueue = true;
@@ -79,7 +81,9 @@ function Cube(canvas, options) {
     this.anim.queue = [];
     this.anim.start = null;
     this.anim.interpolator = interpolation.get(this.anim.interpolator);
-    this.moveCompleteListener = options.moveCompleteListener || defaults.moveCompleteListener;
+
+    this.moveStartListener = options.moveStartListener || defaults.moveStartListener;
+    this.moveEndListener = options.moveEndListener || defaults.moveEndListener;
 
     this.isInitialized = false;
 
@@ -214,15 +218,7 @@ Cube.prototype._performRaycast = function _performRaycast() {
         var norm = new THREE.Matrix3().getNormalMatrix(elem.object.matrixWorld);
         var dir = elem.face.normal.clone().applyMatrix3(norm);
 
-        var face = util.faceToChar(util.axisToFace(dir));
-        console.log("Clicked on face", face);
-        //this.algorithm(face);
-
-        return face;
-
-        // this._onCubieClick(elem.object,
-        //   elem.object.coords.clone(),
-        //   elem.face.normal.clone());
+        return util.faceToChar(util.axisToFace(dir));
     }
 }
 
@@ -403,13 +399,13 @@ Cube.prototype._init = function _init() {
         self.mouse.down = true;
 
         self.mouse.timeout = setTimeout(function() {
-          if (!self.mouse.hasMoved && self.dclick) {
+          if (!self.mouse.hasMoved && self.longClick) {
             var face = self._performRaycast();
             if (face !== undefined) self.algorithm(algorithm.invert(face));
           }
 
           self.mouse.down = false;
-        }, 400);
+        }, self.longClickDelay);
     }
     self.onMouseMoveListener = function onMouseMoveListener(e) {
         if (!self.mouse.down) return;
@@ -428,7 +424,7 @@ Cube.prototype._init = function _init() {
         self.mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
         self.mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
 
-        if (!self.mouse.hasMoved) {
+        if (!self.mouse.hasMoved && self.click) {
           var face = self._performRaycast();
           if (face !== undefined) self.algorithm(face);
         }
@@ -465,7 +461,7 @@ Cube.prototype._init = function _init() {
             }
             if (self.anim.queue.length != 0) {
                 self.anim.currDuration = self.anim.duration *
-                Math.max(0.3, Math.pow(0.9, self.anim.queue.length/2));
+                  Math.max(0.3, Math.pow(0.9, self.anim.queue.length/2));
                 self._startAnimation(self.anim.queue.shift());
             }
         }
@@ -569,36 +565,13 @@ Cube.prototype._alignCubies = function _alignCubies() {
     }
 };
 
-var layerNumber = 0;
+//var layerNumber = 0;
 Cube.prototype._onKeyPress = function onKeyPress(e) {
     var key = String.fromCharCode(e.keyCode ? e.keyCode : e.which);
-    if (key >= 0 && key <= 9) {
-        layerNumber = Math.min(this.size-1,key);
-    }
+    var inv = key !== key.toUpperCase() && !e.shiftKey;
+    var alg = key.toUpperCase() + (inv ? "'" : "");
 
-    var cw = key.toUpperCase() === key ^ key.shiftKey;
-    var face = util.charToFace(key);
-
-    //    console.log("ctrl: ", key.ctrlKey, "face: ", face);
-    if (key.ctrlKey && face) {
-        e.preventDefault();
-        this.lookAtFace(face);
-    }
-
-    var layer = (face == Face.FRONT || face == Face.LEFT || face == Face.DOWN)
-    ? layerNumber
-    : this.size -1 - layerNumber;
-
-    if (face) {
-        layerNumber = 0;
-        this._enqueueAnimation(new Animation(cw ? face : -face, [layer]));
-    } else {
-        var axis = util.charToAxis(key);
-        var layers = []; for (var i = 0; i < this.size; i++) layers.push(i);
-        if (axis) {
-            this._enqueueAnimation(new Animation(cw ? axis : -axis, layers));
-        }
-    }
+    this.algorithm(alg);
 };
 
 Cube.prototype.algorithm = function algorithm(alg) {
@@ -619,21 +592,23 @@ Cube.prototype.algorithm = function algorithm(alg) {
         // process prime (inverts turn direction)
         c = move.charAt(p++);
         if (c == "'") cw = !cw;
+        var layerNumber = 0;
         if (face) {
             var layer = (face == Face.FRONT || face == Face.LEFT || face == Face.DOWN)
             ? layerNumber
             : this.size -1 - layerNumber;
             var layers = [layer];
-            this._enqueueAnimation(new Animation(cw ? face: -face, layers), false);
+            this._enqueueAnimation(new Animation(cw ? face: -face, layers, move), false);
         } else if (axis) {
             var layers = []; for (var j = 0; j < this.size; j++) layers.push(j);
-            this._enqueueAnimation(new Animation(cw ? axis : -axis, layers), false);
+            this._enqueueAnimation(new Animation(cw ? axis : -axis, layers, move), false);
         }
     }
 }
 
 
-function Animation(axis, layers) {
+function Animation(axis, layers, move) {
+    this.move = move;
     this.targetAngle = (PI/2);
     this.angle = 0;
     this.axisVector = util.faceToAxis(axis);
@@ -670,6 +645,8 @@ Cube.prototype._startAnimation = function _startAnimation(animation) {
     this._addLayersToActiveGroup(this.anim.current.axis, this.anim.current.layers);
     this.anim.start = this.clock.getElapsedTime();
     this.anim.animating = true;
+
+    if (this.moveStartListener) this.moveStartListener(this.anim.current.move);
 };
 
 Cube.prototype._updateAnimation = function _updateAnimation() {
@@ -705,7 +682,9 @@ Cube.prototype._onAnimationEnd = function _onAnimationEnd() {
     this._alignCubies();
     this.anim.animating = false;
 
-    if (this.moveCompleteListener) this.moveCompleteListener();
+    if (this.moveEndListener) this.moveEndListener(this.anim.current.move);
+
+    this.anim.current = undefined;
 };
 
 Cube.prototype._updateCubiesRotation = function _updateCubiesRotation() {

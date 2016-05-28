@@ -17,8 +17,15 @@ var cube = new Cube(canvas, {
   size: Number(util.getQueryParameter("size") || 3),
   showLabels: true,
   state: util.getQueryParameter("state"),
-  moveCompleteListener: moveCompleteListener,
+
+  click: true,
+  longClick: false,
+
+  moveEndListener: function(move) {
+    controls.state = cube.getState();
+  },
 });
+
 
 var gui = new dat.GUI();
 
@@ -45,7 +52,7 @@ function initGui() {
     .onChange(function() { solve(); });
 
   var v = folder("View");
-  v.add(controls, 'labels').name("Show Labels")
+  v.add(controls, 'labels').name("Show Labels").listen()
     .onFinishChange(function(v) { cube.setLabels(v); });
   v.add(controls, 'camera').name("Reset Camera")
     .onFinishChange(function() { cube.resetCamera(); });
@@ -69,7 +76,7 @@ function initGui() {
   alg.add(controls, "button").name("Invert")
     .onFinishChange(function() { controls.alg = algorithm.invert(controls.alg); });
 
-  if (screen.width <= 500) gui.close();
+  if (window.innerWidth <= 500) gui.close();
 
   function folder(name) {
     var f = gui.addFolder(name);
@@ -86,9 +93,6 @@ function clickListener() {
   canvas.focus();
 }
 
-function moveCompleteListener() {
-  controls.state = cube.getState();
-}
 
 function solve() {
   var alg = solver.solve(new State(cube.getState()));
