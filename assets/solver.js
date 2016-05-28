@@ -285,6 +285,36 @@ function whichIs(p, p2, face) {
     return p[p2.indexOf(face)];
 }
 
+
+var CubejsWorker = require("worker!./solver_cubejs_worker");
+function createCubejsSolver(cb) {
+  var worker = new CubejsWorker();
+  worker.addEventListener("message", function (e) {
+    if (e.data.name !== "ready") return;
+    cb(new CubejsSolver(worker));
+  });
+}
+
+function CubejsSolver(worker) {
+  this.worker = worker;
+  this.queues = {};
+  this.worker.addEventListener("message", function (e) {
+    if (e.data.name !== "solved") return;
+    this.queues[e.data.state].forEach(function (cb) {
+      cb(e.data.alg);
+    });
+    delete this.queues[e.data.state];
+  }.bind(this));
+}
+
+CubejsSolver.prototype.solve = function (state, cb) {
+  if (state in this.queues) return this.queues[state].push(cb);
+  this.queues[state] = [ cb ];
+  this.worker.postMessage({ name: "solve", state: state });
+};
+
+
 module.exports = {
     solve: solve,
+    createCubejsSolver: createCubejsSolver,
 };
