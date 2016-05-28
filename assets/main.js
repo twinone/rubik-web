@@ -17,8 +17,15 @@ var cube = new Cube(canvas, {
   size: Number(util.getQueryParameter("size") || 3),
   showLabels: true,
   state: util.getQueryParameter("state"),
-  moveCompleteListener: moveCompleteListener,
+
+  click: true,
+  dclick: true,
+
+  moveEndListener: function(move) {
+    controls.state = cube.getState();
+  },
 });
+
 
 var gui = new dat.GUI();
 
@@ -86,9 +93,6 @@ function clickListener() {
   canvas.focus();
 }
 
-function moveCompleteListener() {
-  controls.state = cube.getState();
-}
 
 function solve() {
   var alg = solver.solve(new State(cube.getState()));

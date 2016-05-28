@@ -33,7 +33,12 @@ var prod_defaults = {
         interpolator: "linear" //name or function
     },
 
+    click: true,
     dclick: false,
+    dclickDelay: 400,
+
+    moveStartListener: function(){},
+    moveEndListener: function(){},
 };
 
 module.exports = { defaults: prod_defaults };
