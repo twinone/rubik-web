@@ -9,7 +9,7 @@ git checkout $branch index.html
 git checkout $branch img
 
 cd assets
-NODE_ENV=production webpack
+NODE_ENV=production webpack --output-public-path "/rubik-web/build/"
 cd ..
 
 rm -rf assets
