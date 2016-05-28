@@ -18,8 +18,8 @@ var cube = new Cube(canvas, {
   showLabels: true,
   state: util.getQueryParameter("state"),
 
-  click: false,
-  longClick: true,
+  click: true,
+  longClick: false,
 
   moveEndListener: function(move) {
     controls.state = cube.getState();
