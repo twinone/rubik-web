@@ -12,10 +12,9 @@ self.addEventListener("message", function (e) {
   });
 
   // Map our state to an unrotated one
-  var mapping = {}, reverseMapping = {};
+  var mapping = {};
   Object.keys(faces).forEach(function (face) {
     mapping[faces[face][4]] = face;
-    mapping[face] = faces[face][4];
   });
   Object.keys(faces).forEach(function (face) {
     faces[face] = faces[face].split("").map(function (c) {
@@ -24,15 +23,10 @@ self.addEventListener("message", function (e) {
   });
 
   // Solve!
-  var cube = Cube.fromString("URFDLB".split("").map(function (face) {
+  var cst = "URFDLB".split("").map(function (face) {
     return faces[face];
-  }).join(""));
-  var alg = cube.solve();
-
-  // Undo the mapping
-  alg = alg.split("").map(function (c) {
-    return (c in reverseMapping) ? reverseMapping[c] : c;
-  }).join("");
+  }).join(""); console.log(cst);
+  var alg = Cube.fromString(cst).solve();
 
   self.postMessage({ name: "solved", state: state, alg: alg });
 });
