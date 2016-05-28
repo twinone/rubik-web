@@ -34,8 +34,8 @@ var prod_defaults = {
     },
 
     click: true,
-    dclick: false,
-    dclickDelay: 400,
+    longClick: false,
+    longClickDelay: 400,
 
     moveStartListener: function(){},
     moveEndListener: function(){},

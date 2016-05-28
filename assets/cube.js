@@ -61,8 +61,9 @@ function Cube(canvas, options) {
     this.active = null; // init
     this.labels = null;
 
-    this.dclick = (options.dclick != undefined) ? options.dclick : defaults.dclick;
-    this.dclickDelay = options.dclickDelay || defaults.dclickDelay;
+    this.click = (options.click !== undefined) ? options.click : defaults.click;
+    this.longClick = (options.longClick !== undefined) ? options.longClick : defaults.longClick;
+    this.longClickDelay = options.longClickDelay || defaults.longClickDelay;
 
     this.shouldShowLabels = (options.showLabels !== undefined) ? options.showLabels : defaults.showLabels;
     this.shouldOptimizeQueue = true;
@@ -398,13 +399,13 @@ Cube.prototype._init = function _init() {
         self.mouse.down = true;
 
         self.mouse.timeout = setTimeout(function() {
-          if (!self.mouse.hasMoved && self.dclick) {
+          if (!self.mouse.hasMoved && self.longClick) {
             var face = self._performRaycast();
             if (face !== undefined) self.algorithm(algorithm.invert(face));
           }
 
           self.mouse.down = false;
-        }, self.dclickDelay);
+        }, self.longClickDelay);
     }
     self.onMouseMoveListener = function onMouseMoveListener(e) {
         if (!self.mouse.down) return;
@@ -423,7 +424,7 @@ Cube.prototype._init = function _init() {
         self.mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
         self.mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
 
-        if (!self.mouse.hasMoved) {
+        if (!self.mouse.hasMoved && self.click) {
           var face = self._performRaycast();
           if (face !== undefined) self.algorithm(face);
         }
