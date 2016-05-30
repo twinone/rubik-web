@@ -25,7 +25,7 @@ self.addEventListener("message", function (e) {
   // Solve!
   var cst = "URFDLB".split("").map(function (face) {
     return faces[face];
-  }).join(""); console.log(cst);
+  }).join("");
   var alg = Cube.fromString(cst).solve();
 
   self.postMessage({ name: "solved", state: state, alg: alg });
