@@ -77,10 +77,12 @@ function capture() {
   var img = document.createElement("img");
   img.src = canvas.toDataURL();
   var images = document.getElementById("images");
-  images.insertBefore(img, images.childNodes[0]);
+  images.appendChild(img);
+
   faces.push(ctx.getImageData(0,0,s*scale,s*scale));
   if (faces.length == 6) {
     processFaces();
+    while (images.firstChild) images.removeChild(images.firstChild);
   }
 }
 
