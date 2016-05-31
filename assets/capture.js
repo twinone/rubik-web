@@ -1,3 +1,5 @@
+var ColorUtil = require("./colorutil");
+
 navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia || navigator.oGetUserMedia;
 
 // Scale the cropping view to this percentage of the camera view
@@ -81,7 +83,9 @@ function capture() {
 
   faces.push(ctx.getImageData(0,0,s*scale,s*scale));
   if (faces.length == 6) {
-    processFaces();
+    var stickers = processFaces();
+    var state = getState(stickers);
+    console.log("state", state);
     while (images.firstChild) images.removeChild(images.firstChild);
   }
 }
@@ -95,17 +99,13 @@ function processFaces() {
   faces = [];
   var x = 0;
   for (var i = 0; i < colors.length; i++) {
-    console.log("face " + i);
     var c = colors[i];
-    var str = "";
     for (var j = 0; j < c.length; j++) {
       stickers.push({
         "color": c[j],
         "position": x++,
       });
-      str += " " + rgbToHex(c[j]);
     }
-    console.log(str);
   }
   return stickers;
 }
@@ -121,7 +121,6 @@ function px(img, x, y) {
 }
 
 function processFace(img) {
-  console.log("Processing", img);
   var colors = [];
   var bs = img.width/3;
   for (var i = 0; i < 3; i++) {
@@ -151,6 +150,97 @@ function processFace(img) {
   }
   return colors;
 }
+
+function getState(stickers) {
+  var ss = 9;
+  var groups = [];
+  for (var i = 5; i >= 0; i--) {
+    var l = [];
+    l.push(stickers.splice(4+i*ss,1)[0]);
+    groups.unshift(l);
+  }
+  console.log("groups=",groups)
+  while (stickers[0]) {
+    var candidate = null;
+    var candidateList = null;
+    var candidateDst = 0;
+
+    groups.forEach(function(l) {
+      if (l.length == ss) return;
+      var avg = average(l);
+      var st = getCandidate(stickers, avg);
+      var dst = ColorUtil.colorDistance(st.color, avg);
+      if (dst < candidateDst || candidate == null) {
+        candidate = st;
+        candidateDst = dst;
+        candidateList = l;
+      }
+    });
+
+    console.log("add sticker", candidate);
+    candidateList.push(candidate);
+    stickers.splice(stickers.indexOf(candidate), 1);
+  }
+
+  var state = [];
+  var i = 0;
+  groups.forEach(function(l) {
+    l.forEach(function(s) {
+      var c = "ULFRBD".charAt(i);
+      state[s.position] = c;
+    });
+    i++;
+  });
+
+  return state.join("");
+}
+
+
+function getCandidate(stickers, color) {
+  minDst = 0;
+  res = null;
+  stickers.forEach(function(s) {
+    dst = ColorUtil.colorDistance(color, s.color);
+    if (dst < minDst || res==null) {
+      minDst = dst;
+      res = s;
+    }
+  });
+  return res;
+}
+
+function average(l) {
+  var s = l.length;
+  var r = 0;
+  var g = 0;
+  var b = 0;
+  for (var i = 0; i < s; i++) {
+    var pr = l[i].color.r;
+    var pg = l[i].color.g;
+    var pb = l[i].color.b;
+
+    r += pr*pr;
+    g += pg*pg;
+    b += pb*pb;
+  }
+  r = Math.sqrt(r/s);
+  g = Math.sqrt(g/s);
+  b = Math.sqrt(b/s);
+  return {
+    'r':Math.floor(r),
+    'g':Math.floor(g),
+    'b':Math.floor(b),
+    'a':255,
+  }
+}
+
+
+
+
+
+
+
+
 
 // http://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
 
