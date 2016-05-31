@@ -10,6 +10,10 @@ var State = require("./state").State;
 var util = require("./util");
 var algorithm = require("./algorithm");
 
+var capture = require("./capture");
+
+capture.displayVideo();
+
 
 var canvas = document.getElementById("canvas");
 
@@ -40,6 +44,7 @@ var controls = {
   state: cube.getState(),
   alg: util.getQueryParameter("algorithm") || "",
   button: function(){}, // used for other buttons
+  readState: function(){},
 };
 
 function initGui() {
@@ -68,6 +73,14 @@ function initGui() {
   st.add(controls, "state").name("Modify State").listen();
   st.add(controls, "button").name("Apply State")
     .onFinishChange(function() { cube.setState(controls.state); });
+  st.add(controls, "readState").name("Read State")
+    .onFinishChange(function() {
+      console.log("Starting reading state");
+      capture.start(function(state) {
+        console.log("Got State: " + state);
+        cube.setState(state);
+      });
+    });
 
   var alg = folder("Algorithm");
   alg.add(controls, "alg").name("Edit Algorithm").listen();
