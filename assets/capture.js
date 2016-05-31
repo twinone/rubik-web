@@ -79,18 +79,33 @@ function capture() {
   var images = document.getElementById("images");
   images.insertBefore(img, images.childNodes[0]);
   faces.push(ctx.getImageData(0,0,s*scale,s*scale));
-  if (faces.length == 1) {
+  if (faces.length == 6) {
     processFaces();
   }
 }
 
 function processFaces() {
-  var state = [];
+  var stickers = [];
+  var colors = [];
   for (var i = 0; i < faces.length; i++) {
-      state.push(processFace(faces[i]));
+      colors.push(processFace(faces[i]));
   }
   faces = [];
-  console.log(state);
+  var x = 0;
+  for (var i = 0; i < colors.length; i++) {
+    console.log("face " + i);
+    var c = colors[i];
+    var str = "";
+    for (var j = 0; j < c.length; j++) {
+      stickers.push({
+        "color": c[j],
+        "position": x++,
+      });
+      str += " " + rgbToHex(c[j]);
+    }
+    console.log(str);
+  }
+  return stickers;
 }
 
 function px(img, x, y) {
@@ -133,6 +148,19 @@ function processFace(img) {
     colors[i].a = Math.sqrt(colors[i].a);
   }
   return colors;
+}
+
+// http://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
+
+function rgbToHex(x) {
+  function componentToHex(c) {
+      var hex = c.toString(16);
+      return hex.length == 1 ? ("0" + hex) : hex;
+  }
+
+  return "#" + componentToHex(Math.floor(x.r))
+    + componentToHex(Math.floor(x.g))
+    + componentToHex(Math.floor(x.b));
 }
 
 
