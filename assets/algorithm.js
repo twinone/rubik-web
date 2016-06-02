@@ -79,9 +79,24 @@ function inv(move) {
     else return move + "'";
 }
 
+function rot(move) {
+  var rot = 1;
+  if (isTwo(move)) rot *= 2;
+  if (isPrime(move)) rot *= -1;
+  return rot;
+}
+
+function isTwo(move) {
+  return move.charAt(1) == '2';
+}
+
+function isPrime(move) {
+  return move.charAt(move.length-1) == "'";
+}
 module.exports = {
     random: random,
     invert: invert,
     transform: transform,
     optimize: optimize,
+    rot: rot,
 };
