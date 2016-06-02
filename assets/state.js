@@ -1,5 +1,6 @@
 var model = require("./model");
 var util = require("./util");
+var algorithm = require("./algorithm");
 
 // Faces by their index
 var FACES = ["U", "L", "F", "R", "B", "D"];
@@ -277,29 +278,25 @@ State.prototype._findCorner = function _findCorner(stickers) {
 
 
 
-State.prototype.algorithm = function algorithm(alg) {
+State.prototype.algorithm = function _algorithm(alg) {
     //console.log("ALG:",alg);
     var moves = alg.split(" ");
     for (var i = 0; i < moves.length; i++) {
         var move = moves[i].trim();
         if (move == "") continue;
-        var p = 0;
-        var c = move.charAt(p);
-        p++;
+
+        var c = move.charAt(0);
         var face = c.toUpperCase();
-        var axis = c;
         var upper = (c == c.toUpperCase()); // uppercase letter is clockwise
         // process prime (inverts turn direction)
-        var rot = 1;
-        if (move.charAt(p) == '2') { rot *= 2; p++; }
-        if (move.charAt(p) == "'") { rot *= -1; p++; }
+        var rot = algorithm.rot(move);
 
         if (isFace(face)) {
             var layers = [0];
             if (!upper) layers.push(1);
-        } else if (isAxis(axis)) {
+        } else if (isAxis(c)) {
             var layers = []; for (var j = 0; j < this.size; j++) layers.push(j);
-            face = axisToFace(axis);
+            face = axisToFace(c);
         } else {
             console.log("Invalid move: " + move);
             continue;
