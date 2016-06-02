@@ -82,12 +82,14 @@ State.prototype._line = function _line(face, isRow, num) {
 /*
 Rotates layers around a face
 */
-State.prototype.rotate = function rotate(face, cw, layers) {
+State.prototype.rotate = function rotate(face, rot, layers) {
     if (layers == undefined) layers = [0];
-    for (var i = 0; i < layers.length; i++) {
-        if (layers[i] == 0) this._rotateFace(face, cw);
-        if (layers[i] == this.size-1) this._rotateFace(util.opposite(face), !cw);
-        this._rotateRing(face, layers[i], cw);
+    for (var n = 0; n < ((rot%4+4)%4); n++) {
+      for (var i = 0; i < layers.length; i++) {
+          if (layers[i] == 0) this._rotateFace(face, true);
+          if (layers[i] == this.size-1) this._rotateFace(util.opposite(face), false);
+          this._rotateRing(face, layers[i], true);
+      }
     }
 }
 
@@ -282,14 +284,15 @@ State.prototype.algorithm = function algorithm(alg) {
         var move = moves[i].trim();
         if (move == "") continue;
         var p = 0;
-        var c = move.charAt(p++);
+        var c = move.charAt(p);
+        p++;
         var face = c.toUpperCase();
         var axis = c;
-        var cw = true;
         var upper = (c == c.toUpperCase()); // uppercase letter is clockwise
         // process prime (inverts turn direction)
-        var prime = move.charAt(p++);
-        if (prime == "'") cw = !cw;
+        var rot = 1;
+        if (move.charAt(p) == '2') { rot *= 2; p++; }
+        if (move.charAt(p) == "'") { rot *= -1; p++; }
 
         if (isFace(face)) {
             var layers = [0];
@@ -301,7 +304,7 @@ State.prototype.algorithm = function algorithm(alg) {
             console.log("Invalid move: " + move);
             continue;
         }
-        this.rotate(face, cw, layers);
+        this.rotate(face, rot, layers);
     }
 }
 
@@ -334,4 +337,5 @@ function swap4(v, i0, i1, i2, i3, cw) { if (cw) swap4CW(v, i0, i1, i2, i3); else
 function swap4CCW(v, i0, i1, i2, i3) { swap4CW(v, i3, i2, i1, i0); }
 function swap4CW(v, i0, i1, i2, i3) { tmp = v[i3]; v[i3] = v[i2]; v[i2] = v[i1]; v[i1] = v[i0]; v[i0] = tmp; }
 
+window.state = State;
 module.exports = { State: State };

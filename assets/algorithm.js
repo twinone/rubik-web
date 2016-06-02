@@ -3,11 +3,13 @@
 function random(length) {
     if (!length) length = 30;
     function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-    var turns = "ULFRBDulfrbdXYZ";
+    var turns = "ULFRBD";
     var alg = [];
     while (alg.length < length) {
         var m = turns[randInt(0,turns.length-1)];
-        if (randInt(0,1) == 1) m += "'";
+        var n = randInt(0,2);
+        if (n == 1) m += "2";
+        if (n == 2) m += "'";
         alg.push(m);
         alg = optimize(alg);
     }
@@ -82,5 +84,4 @@ module.exports = {
     invert: invert,
     transform: transform,
     optimize: optimize,
-
 };
