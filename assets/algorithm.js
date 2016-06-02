@@ -93,10 +93,13 @@ function isTwo(move) {
 function isPrime(move) {
   return move.charAt(move.length-1) == "'";
 }
+
 module.exports = {
     random: random,
     invert: invert,
     transform: transform,
     optimize: optimize,
     rot: rot,
+    isTwo: isTwo,
+    isPrime: isPrime,
 };
