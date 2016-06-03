@@ -3,6 +3,7 @@ var THREE = require("./vendor/three");
 var util = require("./util");
 var Cube = require("./cube").Cube;
 var Face = require("./model").Face;
+var faces = require("./model").faces;
 var Axis = require("./model").Axis;
 
 var facemap = {};
@@ -147,9 +148,6 @@ Cubie.prototype._getMaterials = function _getMaterials(stickers) {
   return new THREE.MeshFaceMaterial(materials);
 }
 
-
-
-
 function getStickerMaterial(color, map, wireframe) {
     return new THREE.MeshBasicMaterial({
         color: color,
@@ -160,8 +158,14 @@ function getStickerMaterial(color, map, wireframe) {
     });
 }
 
+Cubie.prototype.invalidateColor = function invalidateColor(face) {
+  var dst = facemap[face];
+  this.material.materials[dst].color.setHex(this.cube.stickers[face]);
+}
 Cubie.prototype.invalidateColors = function invalidateColors() {
-
+  for (var i = 0; i < faces.length; i++) {
+    this.invalidateColor(faces[i]);
+  }
 };
 
 module.exports = {
