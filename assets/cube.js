@@ -574,42 +574,38 @@ Cube.prototype._onKeyPress = function onKeyPress(e) {
     this.algorithm(alg);
 };
 
-Cube.prototype.algorithm = function algorithm(alg) {
+Cube.prototype.algorithm = function _algorithm(alg) {
     var moves = alg.split(" ");
     for (var i = 0; i < moves.length; i++) {
         var move = moves[i].trim();
         if (move == "") continue;
 
-        var p = 0;
-        // process number
-        // TODO
-        // process letter
-        var c = move.charAt(p++);
+        var c = move.charAt(0);
         var face = util.charToFace(c);
         var axis = util.charToAxis(c);
+        var rot = 1;
+        var cw = !algorithm.isPrime(move);
+        var two = algorithm.isTwo(move);
+        if (two) rot *= 2;
 
-        var cw = c == c.toUpperCase(); // uppercase letter is clockwise
-        // process prime (inverts turn direction)
-        c = move.charAt(p++);
-        if (c == "'") cw = !cw;
         var layerNumber = 0;
         if (face) {
             var layer = (face == Face.FRONT || face == Face.LEFT || face == Face.DOWN)
             ? layerNumber
             : this.size -1 - layerNumber;
             var layers = [layer];
-            this._enqueueAnimation(new Animation(cw ? face: -face, layers, move), false);
+            this._enqueueAnimation(new Animation(cw ? face: -face, layers, move, rot), false);
         } else if (axis) {
             var layers = []; for (var j = 0; j < this.size; j++) layers.push(j);
-            this._enqueueAnimation(new Animation(cw ? axis : -axis, layers, move), false);
+            this._enqueueAnimation(new Animation(cw ? axis : -axis, layers, move, rot), false);
         }
     }
 }
 
 
-function Animation(axis, layers, move) {
+function Animation(axis, layers, move, rot) {
     this.move = move;
-    this.targetAngle = (PI/2);
+    this.targetAngle = (PI/2) * Math.abs(rot);
     this.angle = 0;
     this.axisVector = util.faceToAxis(axis);
     this.axisVector.multiplyScalar(-1);
@@ -660,7 +656,7 @@ Cube.prototype._updateAnimation = function _updateAnimation() {
     }
     pct = this.anim.interpolator(pct);
 
-    var angle = (PI/2) * pct;
+    var angle = this.anim.current.targetAngle * pct;
 
     this.active.rotation.x = angle * this.anim.current.axisVector.x;
     this.active.rotation.y = angle * this.anim.current.axisVector.y;
@@ -678,7 +674,7 @@ Cube.prototype._onAnimationEnd = function _onAnimationEnd() {
         child._rotateStickers(this.anim.current.axis);
         sceneutils.detach(child, this.active, this.scene);
     }
-    this._updateCubiesRotation();
+    this._updateCubiesRotation(this.anim.current.move);
     this._alignCubies();
     this.anim.animating = false;
 
@@ -687,10 +683,13 @@ Cube.prototype._onAnimationEnd = function _onAnimationEnd() {
     this.anim.current = undefined;
 };
 
-Cube.prototype._updateCubiesRotation = function _updateCubiesRotation() {
+Cube.prototype._updateCubiesRotation = function _updateCubiesRotation(move) {
+    var num = algorithm.isTwo(move) ? 2 : 1;
     var axis = this.anim.current.axis;
     var userCw = this.anim.current.axis > 0;
     var layers = this.anim.current.layers;
+
+    //for (var n = 0; n < num; n++)
     for (var i = 0; i < layers.length; i++) {
         util.rotateLayer(this.cubies, axis, layers[i], userCw);
     }
