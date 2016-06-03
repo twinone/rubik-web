@@ -45,7 +45,6 @@ Cubie.prototype.getSticker = function getSticker(face) {
     return this.stickers[face];
 }
 
-
 Cubie.prototype.setSticker = function setSticker(face, sticker) {
   this.stickers[face] = sticker;
 
@@ -93,13 +92,6 @@ function rot(obj, indexes, cw) {
     }
 }
 
-
-
-Cubie.prototype.setup = function setup(cube, i, j, k) {
-
-
-}
-
 Cubie.prototype.roundRotation = function roundRotation() {
     this.rotation.x = intRound(mod(this.rotation.x, PI*2), PI/2);
     this.rotation.y = intRound(mod(this.rotation.y, PI*2), PI/2);
@@ -138,14 +130,19 @@ Cubie.prototype._getMaterials = function _getMaterials(stickers) {
       wireframeLinewidth: 2,
       map: map,
   });
+  var self = this;
+  function mat(face) {
+    return self.stickers[face] ?
+       getStickerMaterial(self.cube.stickers[self.stickers[face]], map, wf) : d;
+  }
   var materials = [
       // R L B F U D
-      this.stickers[Face.RIGHT] ? getStickerMaterial(this.cube.stickers[this.stickers[Face.RIGHT]], map, wf) : d,
-      this.stickers[Face.LEFT]  ? getStickerMaterial(this.cube.stickers[this.stickers[Face.LEFT]],  map, wf) : d,
-      this.stickers[Face.BACK]  ? getStickerMaterial(this.cube.stickers[this.stickers[Face.BACK]],  map, wf) : d,
-      this.stickers[Face.FRONT] ? getStickerMaterial(this.cube.stickers[this.stickers[Face.FRONT]], map, wf) : d,
-      this.stickers[Face.UP]    ? getStickerMaterial(this.cube.stickers[this.stickers[Face.UP]],    map, wf) : d,
-      this.stickers[Face.DOWN]  ? getStickerMaterial(this.cube.stickers[this.stickers[Face.DOWN]],  map, wf) : d,
+      mat(Face.RIGHT),
+      mat(Face.LEFT),
+      mat(Face.BACK),
+      mat(Face.FRONT),
+      mat(Face.UP),
+      mat(Face.DOWN),
   ];
   return new THREE.MeshFaceMaterial(materials);
 }
@@ -163,6 +160,9 @@ function getStickerMaterial(color, map, wireframe) {
     });
 }
 
+Cubie.prototype.invalidateColors = function invalidateColors() {
+
+};
 
 module.exports = {
     Cubie: Cubie,

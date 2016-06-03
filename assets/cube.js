@@ -103,6 +103,20 @@ function Cube(canvas, options) {
     if (options.state) this.setState(options.state);
 };
 
+
+Cube.prototype.setStickerColors = function setStickerColors(colors) {
+  if (typeof(colors) !== 'object') throw Error("colors must be an object");
+  this.stickers = colors;
+
+  for (var i = 0; i < this.size; i++) {
+      for (var j = 0; j < this.size; j++) {
+          for (var k = 0; k < this.size; k++) {
+              this.cubies[i][j][k].invalidateColors();
+          }
+      }
+  }
+}
+
 Cube.prototype.isAnimating = function isAnimating() { return this.anim.animating; }
 
 Cube.prototype.setAnimationDuration = function setAnimationDuration(duration) {
@@ -129,25 +143,19 @@ uuuuuullllllffffffrrrrrrbbbbbbdddddd
 Where u means the "up" color.
 
 */
-Cube.prototype.getState = function getState(fancy) {
+Cube.prototype.getState = function getState() {
     var s = this.size;
     var faces = "";
-    if (fancy) faces += "UP: ";
     for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
     faces += util.faceToChar(this.cubies[j][s-1-i][s-1].getSticker(Face.UP));
-    if (fancy) faces += "<br>LEFT: ";
     for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
     faces += util.faceToChar(this.cubies[0][s-1-j][s-1-i].getSticker(Face.LEFT));
-    if (fancy) faces += "<br>FRONT: ";
     for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
     faces += util.faceToChar(this.cubies[j][0][s-1-i].getSticker(Face.FRONT));
-    if (fancy) faces += "<br>RIGHT: ";
     for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
     faces += util.faceToChar(this.cubies[s-1][j][s-1-i].getSticker(Face.RIGHT));
-    if (fancy) faces += "<br>BACK: ";
     for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
     faces += util.faceToChar(this.cubies[s-1-j][s-1][s-1-i].getSticker(Face.BACK));
-    if (fancy) faces += "<br>DOWN: ";
     for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
     faces += util.faceToChar(this.cubies[j][i][0].getSticker(Face.DOWN));
     return faces;
@@ -334,7 +342,6 @@ Cube.prototype._setupCubies = function() {
             this.cubies[i][j] = [];
             for (var k = 0; k < this.size; k++) {
                 var cubie = new Cubie(cubieGeometry, map, this, i, j, k);
-                cubie.setup(cubieGeometry, map);
                 cubie.position.set(
                     (i-(this.size-1)/2) * this.cubieWidth*(1+this.cubieSpacing),
                     (j-(this.size-1)/2) * this.cubieWidth*(1+this.cubieSpacing),
