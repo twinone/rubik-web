@@ -55,7 +55,7 @@ function Cube(canvas, options) {
     this.labelMargin = options.labelMargin || defaults.labelMargin;
 
     this.colors = options.colors || defaults.colors;
-    this.stickers = options.stickers || defaults.stickers;
+    this._setStickers(options.stickers || defaults.stickers);
 
     this.cubies = [];
     this.active = null; // init
@@ -103,6 +103,33 @@ function Cube(canvas, options) {
     if (options.state) this.setState(options.state);
 };
 
+// converts a sticker array [ULFRBD] to an object {1,2,3,-1,-2,-3} used internally
+Cube.prototype._setStickers = function _setStickers(stickers) {
+  var out = {};
+  out[Face.UP]    = stickers[0];
+  out[Face.LEFT]  = stickers[1];
+  out[Face.FRONT] = stickers[2];
+  out[Face.RIGHT] = stickers[3];
+  out[Face.BACK]  = stickers[4];
+  out[Face.DOWN]  = stickers[5];
+  this.stickers = out;
+}
+
+Cube.prototype.setStickerColors = function setStickerColors(colors) {
+  if (!(colors instanceof Array) || colors.length != 6)
+    throw Error("colors must be an array of length 6");
+
+  this._setStickers(colors);
+
+  for (var i = 0; i < this.size; i++) {
+      for (var j = 0; j < this.size; j++) {
+          for (var k = 0; k < this.size; k++) {
+              this.cubies[i][j][k].invalidateColors();
+          }
+      }
+  }
+}
+
 Cube.prototype.isAnimating = function isAnimating() { return this.anim.animating; }
 
 Cube.prototype.setAnimationDuration = function setAnimationDuration(duration) {
@@ -129,25 +156,19 @@ uuuuuullllllffffffrrrrrrbbbbbbdddddd
 Where u means the "up" color.
 
 */
-Cube.prototype.getState = function getState(fancy) {
+Cube.prototype.getState = function getState() {
     var s = this.size;
     var faces = "";
-    if (fancy) faces += "UP: ";
     for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
     faces += util.faceToChar(this.cubies[j][s-1-i][s-1].getSticker(Face.UP));
-    if (fancy) faces += "<br>LEFT: ";
     for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
     faces += util.faceToChar(this.cubies[0][s-1-j][s-1-i].getSticker(Face.LEFT));
-    if (fancy) faces += "<br>FRONT: ";
     for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
     faces += util.faceToChar(this.cubies[j][0][s-1-i].getSticker(Face.FRONT));
-    if (fancy) faces += "<br>RIGHT: ";
     for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
     faces += util.faceToChar(this.cubies[s-1][j][s-1-i].getSticker(Face.RIGHT));
-    if (fancy) faces += "<br>BACK: ";
     for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
     faces += util.faceToChar(this.cubies[s-1-j][s-1][s-1-i].getSticker(Face.BACK));
-    if (fancy) faces += "<br>DOWN: ";
     for (var i = 0; i < s; i++) for (var j = 0; j < s; j++)
     faces += util.faceToChar(this.cubies[j][i][0].getSticker(Face.DOWN));
     return faces;
@@ -334,7 +355,6 @@ Cube.prototype._setupCubies = function() {
             this.cubies[i][j] = [];
             for (var k = 0; k < this.size; k++) {
                 var cubie = new Cubie(cubieGeometry, map, this, i, j, k);
-                cubie.setup(cubieGeometry, map);
                 cubie.position.set(
                     (i-(this.size-1)/2) * this.cubieWidth*(1+this.cubieSpacing),
                     (j-(this.size-1)/2) * this.cubieWidth*(1+this.cubieSpacing),

@@ -3,6 +3,7 @@ var THREE = require("./vendor/three");
 var util = require("./util");
 var Cube = require("./cube").Cube;
 var Face = require("./model").Face;
+var faces = require("./model").faces;
 var Axis = require("./model").Axis;
 
 var facemap = {};
@@ -44,7 +45,6 @@ Cubie.prototype._updateMaterials = function _updateMaterials() {
 Cubie.prototype.getSticker = function getSticker(face) {
     return this.stickers[face];
 }
-
 
 Cubie.prototype.setSticker = function setSticker(face, sticker) {
   this.stickers[face] = sticker;
@@ -93,13 +93,6 @@ function rot(obj, indexes, cw) {
     }
 }
 
-
-
-Cubie.prototype.setup = function setup(cube, i, j, k) {
-
-
-}
-
 Cubie.prototype.roundRotation = function roundRotation() {
     this.rotation.x = intRound(mod(this.rotation.x, PI*2), PI/2);
     this.rotation.y = intRound(mod(this.rotation.y, PI*2), PI/2);
@@ -138,31 +131,45 @@ Cubie.prototype._getMaterials = function _getMaterials(stickers) {
       wireframeLinewidth: 2,
       map: map,
   });
+  var self = this;
+  function mat(face) {
+    return self.stickers[face] ?
+       getStickerMaterial(self.cube.stickers[self.stickers[face]], map, wf) : d;
+  }
   var materials = [
       // R L B F U D
-      this.stickers[Face.RIGHT] ? getStickerMaterial(this.cube.stickers[this.stickers[Face.RIGHT]], map, wf) : d,
-      this.stickers[Face.LEFT]  ? getStickerMaterial(this.cube.stickers[this.stickers[Face.LEFT]],  map, wf) : d,
-      this.stickers[Face.BACK]  ? getStickerMaterial(this.cube.stickers[this.stickers[Face.BACK]],  map, wf) : d,
-      this.stickers[Face.FRONT] ? getStickerMaterial(this.cube.stickers[this.stickers[Face.FRONT]], map, wf) : d,
-      this.stickers[Face.UP]    ? getStickerMaterial(this.cube.stickers[this.stickers[Face.UP]],    map, wf) : d,
-      this.stickers[Face.DOWN]  ? getStickerMaterial(this.cube.stickers[this.stickers[Face.DOWN]],  map, wf) : d,
+      mat(Face.RIGHT),
+      mat(Face.LEFT),
+      mat(Face.BACK),
+      mat(Face.FRONT),
+      mat(Face.UP),
+      mat(Face.DOWN),
   ];
   return new THREE.MeshFaceMaterial(materials);
 }
 
-
-
-
 function getStickerMaterial(color, map, wireframe) {
-    return new THREE.MeshBasicMaterial({
+    var mat = new THREE.MeshBasicMaterial({
         color: color,
         map: map,
         wireframe: wireframe,
         wireframeLinewidth: 2,
         side: THREE.FrontSide
     });
+    mat.isSticker = true;
+    return mat;
 }
 
+Cubie.prototype.invalidateColor = function invalidateColor(face) {
+  var dst = facemap[face];
+  if (this.material.materials[dst].isSticker)
+  this.material.materials[dst].color.setHex(this.cube.stickers[face]);
+}
+Cubie.prototype.invalidateColors = function invalidateColors() {
+  for (var i = 0; i < faces.length; i++) {
+    this.invalidateColor(faces[i]);
+  }
+};
 
 module.exports = {
     Cubie: Cubie,
