@@ -2,7 +2,7 @@
 commit=$(git rev-parse dev)
 
 git checkout gh-pages || (echo "Abort" && exit)
-git merge dev
+git merge dev -m "Merge branch 'dev' into gh-pages"
 
 NODE_ENV=production webpack
 
