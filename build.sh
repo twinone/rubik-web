@@ -1,25 +1,15 @@
 #!/bin/bash
+commit=$(git rev-parse dev)
 
-branch=$(git symbolic-ref --short -q HEAD)
-commit=$(git rev-parse HEAD)
-git checkout gh-pages
+git checkout gh-pages || (echo "Abort" && exit)
+git merge dev
 
-git checkout $branch assets
-git checkout $branch index.html
-git checkout $branch img
+NODE_ENV=production webpack
 
-cd assets
-NODE_ENV=production webpack --output-public-path "/rubik-web/build/"
-cd ..
-
-rm -rf assets
-git rm -r assets 2>&1 > /dev/null
-git add -f build index.html img
-
+git add -f build
 git commit -m "Automated build ($commit)"
 
 if [[ "$1" -eq "--push" ]]; then
 	git push origin gh-pages;
-	git checkout $branch
 fi
 
