@@ -1,21 +1,13 @@
 var Face = require("./model").Face;
 
-// var stickers = [
-//   0xFFD500,
-//   0x0051BA,
-//   0xC41E3A,
-//   0x009E60,
-//   0xFF5800,
-//   0xFFFFFF,
-// ];
-
-var stickers = {};
-stickers[Face.RIGHT] = 0x009E60;
-stickers[Face.LEFT] =  0x0051BA;
-stickers[Face.BACK] =  0xFF5800;
-stickers[Face.FRONT] = 0xC41E3A;
-stickers[Face.UP] =    0xFFD500;
-stickers[Face.DOWN] =  0xFFFFFF;
+var stickers = [
+  0xFFD500,
+  0x0051BA,
+  0xC41E3A,
+  0x009E60,
+  0xFF5800,
+  0xFFFFFF,
+];
 
 var prod_defaults = {
     size: 3,

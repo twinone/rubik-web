@@ -149,17 +149,20 @@ Cubie.prototype._getMaterials = function _getMaterials(stickers) {
 }
 
 function getStickerMaterial(color, map, wireframe) {
-    return new THREE.MeshBasicMaterial({
+    var mat = new THREE.MeshBasicMaterial({
         color: color,
         map: map,
         wireframe: wireframe,
         wireframeLinewidth: 2,
         side: THREE.FrontSide
     });
+    mat.isSticker = true;
+    return mat;
 }
 
 Cubie.prototype.invalidateColor = function invalidateColor(face) {
   var dst = facemap[face];
+  if (this.material.materials[dst].isSticker)
   this.material.materials[dst].color.setHex(this.cube.stickers[face]);
 }
 Cubie.prototype.invalidateColors = function invalidateColors() {
