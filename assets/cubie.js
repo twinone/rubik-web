@@ -36,6 +36,7 @@ function Cubie(geo, map, cube, i, j, k) {
     var mat = this._getMaterials();
     THREE.Mesh.apply(this, [geo, mat]);
 }
+
 Cubie.prototype._updateMaterials = function _updateMaterials() {
   var mat = this._getMaterials();
 }
@@ -58,6 +59,8 @@ Cubie.prototype.setSticker = function setSticker(face, sticker) {
   var f = util.axisToFace(axis);
   var dst = facemap[f];
 
+  this.material.materials[dst].isSticker = true;
+  this.material.materials[dst].sticker = sticker;
   this.material.materials[dst].color.setHex(this.cube.stickers[sticker]);
 }
 // Only valid when all cubies are in their original positions.
@@ -134,7 +137,7 @@ Cubie.prototype._getMaterials = function _getMaterials(stickers) {
   var self = this;
   function mat(face) {
     return self.stickers[face] ?
-       getStickerMaterial(self.cube.stickers[self.stickers[face]], map, wf) : d;
+       getStickerMaterial(self.cube.stickers[self.stickers[face]], map, wf, face) : d;
   }
   var materials = [
       // R L B F U D
@@ -148,7 +151,7 @@ Cubie.prototype._getMaterials = function _getMaterials(stickers) {
   return new THREE.MeshFaceMaterial(materials);
 }
 
-function getStickerMaterial(color, map, wireframe) {
+function getStickerMaterial(color, map, wireframe, face) {
     var mat = new THREE.MeshBasicMaterial({
         color: color,
         map: map,
@@ -157,6 +160,7 @@ function getStickerMaterial(color, map, wireframe) {
         side: THREE.FrontSide
     });
     mat.isSticker = true;
+    mat.sticker = face;
     return mat;
 }
 
@@ -166,8 +170,9 @@ Cubie.prototype.invalidateColor = function invalidateColor(face) {
   this.material.materials[dst].color.setHex(this.cube.stickers[face]);
 }
 Cubie.prototype.invalidateColors = function invalidateColors() {
-  for (var i = 0; i < faces.length; i++) {
-    this.invalidateColor(faces[i]);
+  var m = this.material.materials;
+  for (var i = 0; i < m.length; i++) {
+    if (m[i].isSticker) m[i].color.setHex(this.cube.stickers[m[i].sticker]);
   }
 };
 
