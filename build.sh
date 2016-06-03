@@ -6,7 +6,7 @@ git merge dev -m "Merge branch 'dev' into gh-pages"
 
 NODE_ENV=production webpack
 
-git add -f build
+git add -f 'build/*.js'
 git commit -m "Automated build ($commit)"
 
 if [[ "$1" -eq "--push" ]]; then
