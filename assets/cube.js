@@ -671,6 +671,8 @@ Cube.prototype._onAnimationEnd = function _onAnimationEnd() {
     // Re-add items to the scene
     while (this.active.children.length > 0) {
         var child = this.active.children[0];
+        var num = algorithm.isTwo(this.anim.current.move) ? 2 : 1;
+        for (var n = 0; n < num; n++)
         child._rotateStickers(this.anim.current.axis);
         sceneutils.detach(child, this.active, this.scene);
     }
@@ -689,7 +691,7 @@ Cube.prototype._updateCubiesRotation = function _updateCubiesRotation(move) {
     var userCw = this.anim.current.axis > 0;
     var layers = this.anim.current.layers;
 
-    //for (var n = 0; n < num; n++)
+    for (var n = 0; n < num; n++)
     for (var i = 0; i < layers.length; i++) {
         util.rotateLayer(this.cubies, axis, layers[i], userCw);
     }
