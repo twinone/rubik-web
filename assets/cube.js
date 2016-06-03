@@ -247,10 +247,9 @@ Cube.prototype.scramble = function scramble(num) {
     var expectedLength = this.anim.queue.length + turns;
 
     while (this.anim.queue.length < expectedLength) {
-        var face = randFace();
-        var layer = randInt(0, this.size-1);
-        var anim = new Animation(face, [layer]);
-        this._enqueueAnimation(anim, false);
+        var move = "ULFBRD".charAt(randInt(0, 5));
+        if (randInt(0, 1) == 2) move += "'";
+        this.algorithm(move);
         this._optimizeQueue();
     }
 };
