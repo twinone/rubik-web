@@ -539,6 +539,12 @@ Cube.prototype.showLabels = function showLabels () {
       height: 1
     })
 
+    geo.computeBoundingBox()
+    var w = geo.boundingBox.max.x;
+    var h = geo.boundingBox.max.y;
+
+    geo.applyMatrix(new THREE.Matrix4().makeTranslation(-w/2,-h/2,0))
+
     var m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: this.colors.label }))
     m.position.copy(util.faceToAxis(faces[i])).multiplyScalar(pos)
 
