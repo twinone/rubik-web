@@ -22,8 +22,15 @@ var cube = new Cube(canvas, {
 
   moveEndListener: function (move) {
     controls.state = cube.getState()
-  }
+  },
+
+  //onCubieClick: cubieColorer,
 })
+
+function cubieColorer(face, cubie) {
+  cubie.setSticker(util.charToFace(face), Face.NONE);
+  controls.state = cube.getState()
+}
 
 var gui = new dat.GUI()
 

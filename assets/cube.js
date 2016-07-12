@@ -54,7 +54,7 @@ function Cube (canvas, options) {
 
   this.colors = options.colors || defaults.colors
   this._setStickers(options.stickers || defaults.stickers)
-  this.onCubieClick = options.onCubieClick || function(){}
+  this.onCubieClick = options.onCubieClick || function(){return true}
 
 
   this.click = (options.click !== undefined) ? options.click : defaults.click
@@ -402,8 +402,10 @@ Cube.prototype._init = function _init () {
     self.mouse.timeout = setTimeout(function () {
       if (!self.mouse.hasMoved && self.longClick) {
         var rc = self._raycast()
-        var face = rc.face
-        if (face !== undefined) self.algorithm(algorithm.invert(face))
+        if (rc != undefined) {
+          var face = rc.face
+          if (face !== undefined) self.algorithm(algorithm.invert(face))
+        }
       }
 
       self.mouse.down = false
@@ -428,10 +430,12 @@ Cube.prototype._init = function _init () {
 
     if (!self.mouse.hasMoved && self.click) {
       var rc = self._raycast()
-      var face = rc.face
-      if (face !== undefined) {
-        self.algorithm(face)
-        self.onCubieClick(rc.face, rc.object)
+      if (rc != undefined) {
+        var face = rc.face
+        if (face !== undefined) {
+          if (self.onCubieClick(rc.face, rc.object))
+            self.algorithm(face)
+        }
       }
     }
 
