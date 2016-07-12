@@ -119,6 +119,7 @@ function faceToString(face) {
         case Face.UP:    return 'UP';    case Face.DOWN:  return 'DOWN';
         case Face.LEFT:  return 'LEFT';  case Face.RIGHT: return 'RIGHT';
     }
+    return "X"
 }
 
 function faceToAxis(face) {
@@ -160,11 +161,11 @@ function charToAxis(letter) {
 }
 function charToFace(letter) {
     switch (letter.toUpperCase()) {
-        case 'U': return Face.UP;        case 'D': return Face.DOWN;
-        case 'L': return Face.LEFT;      case 'R': return Face.RIGHT;
-        case 'B': return Face.BACK;      case 'F': return Face.FRONT;
+        case 'U': return Face.UP;   case 'D': return Face.DOWN;
+        case 'L': return Face.LEFT; case 'R': return Face.RIGHT;
+        case 'B': return Face.BACK; case 'F': return Face.FRONT;
     }
-    return null;
+    return Face.NONE;
 }
 
 function faceToColorString(face) {

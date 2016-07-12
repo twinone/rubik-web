@@ -1,7 +1,8 @@
 var Face = {
   RIGHT: 1, LEFT: -1,
   BACK: 2, FRONT: -2,
-  UP: 3, DOWN: -3
+  UP: 3, DOWN: -3,
+  NONE: 0,
 }
 
 var faces = [Face.RIGHT, Face.BACK, Face.UP, Face.LEFT, Face.FRONT, Face.DOWN]

@@ -24,7 +24,8 @@ var prod_defaults = {
     axisZ: 0x0000AA,
     label: 0x88004D40,
     background: 0xFFFFFF,
-    cube: 0x000000
+    cube: 0x000000,
+    emptySticker: 0xCCCCCC,
   },
 
   wireframe: false,

@@ -54,24 +54,29 @@ function Cube (canvas, options) {
 
   this.colors = options.colors || defaults.colors
   this._setStickers(options.stickers || defaults.stickers)
+  this.onCubieClick = options.onCubieClick || function(){}
 
-  this.cubies = []
-  this.active = null // init
-  this.labels = null
 
   this.click = (options.click !== undefined) ? options.click : defaults.click
   this.longClick = (options.longClick !== undefined) ? options.longClick : defaults.longClick
   this.longClickDelay = options.longClickDelay || defaults.longClickDelay
 
   this.shouldShowLabels = (options.showLabels !== undefined) ? options.showLabels : defaults.showLabels
-  this.shouldOptimizeQueue = true
-
-  this.anim = Object.create(defaults.animation)
-
   if (options.animation)
     Object.keys(options.animation).forEach(function (key) {
       this.anim[key] = options.animation[key]
     })
+
+
+
+
+  this.shouldOptimizeQueue = true
+  this.cubies = []
+  this.active = null // init
+  this.labels = null
+
+  this.anim = Object.create(defaults.animation)
+
 
   this.anim.animating = false
   this.anim.current = null
@@ -96,8 +101,10 @@ function Cube (canvas, options) {
 
   this.wireframe = defaults.wireframe
 
+
   this.init()
   if (options.state) this.setState(options.state)
+
 }
 
 // converts a sticker array [ULFRBD] to an object {1,2,3,-1,-2,-3} used internally
@@ -109,6 +116,7 @@ Cube.prototype._setStickers = function _setStickers (stickers) {
   out[Face.RIGHT] = stickers[3]
   out[Face.BACK] = stickers[4]
   out[Face.DOWN] = stickers[5]
+  out[Face.NONE] = this.colors.emptySticker
   this.stickers = out
 }
 
@@ -206,7 +214,7 @@ Cube.prototype.resetCamera = function resetCamera () {
   this.controls.center.set(0, 0, 0)
 }
 
-Cube.prototype._performRaycast = function _performRaycast () {
+Cube.prototype._raycast = function _raycast () {
   if (this.anim.animating) { console.log('not raycasting while animating!'); return; }
 
   // create a Ray with origin at the mouse position
@@ -233,29 +241,10 @@ Cube.prototype._performRaycast = function _performRaycast () {
     var norm = new THREE.Matrix3().getNormalMatrix(elem.object.matrixWorld)
     var dir = elem.face.normal.clone().applyMatrix3(norm)
 
-    return util.faceToChar(util.axisToFace(dir))
+    return {"face":util.faceToChar(util.axisToFace(dir)), "object":elem.object}
   }
 }
 
-Cube.prototype._onCubieClick = function _onCubieClick (cubie, coords, direction) {
-  var norm = new THREE.Matrix3().getNormalMatrix(cubie.matrixWorld)
-  direction.applyMatrix3(norm)
-
-  console.log('direction:', direction)
-
-  console.log(
-    (cubie.getSticker(Face.RIGHT) ? '(R: ' + util.faceToColorString(cubie.getSticker(Face.RIGHT)) + ') - ' : '') +
-    (cubie.getSticker(Face.LEFT) ? '(L: ' + util.faceToColorString(cubie.getSticker(Face.LEFT)) + ') - ' : '') +
-    (cubie.getSticker(Face.BACK) ? '(B: ' + util.faceToColorString(cubie.getSticker(Face.BACK)) + ') - ' : '') +
-    (cubie.getSticker(Face.FRONT) ? '(F: ' + util.faceToColorString(cubie.getSticker(Face.FRONT)) + ') - ' : '') +
-    (cubie.getSticker(Face.UP) ? '(U: ' + util.faceToColorString(cubie.getSticker(Face.UP)) + ') - ' : '') +
-    (cubie.getSticker(Face.DOWN) ? '(D: ' + util.faceToColorString(cubie.getSticker(Face.DOWN)) + ')' : '')
-  )
-
-  var face = util.faceToChar(util.axisToFace(direction))
-  console.log('Clicked on face', face)
-  this.algorithm(face)
-}
 
 Cube.prototype.scramble = function scramble (num) {
   var turns = num || (this.size - 1) * 10
@@ -412,7 +401,8 @@ Cube.prototype._init = function _init () {
 
     self.mouse.timeout = setTimeout(function () {
       if (!self.mouse.hasMoved && self.longClick) {
-        var face = self._performRaycast()
+        var rc = self._raycast()
+        var face = rc.face
         if (face !== undefined) self.algorithm(algorithm.invert(face))
       }
 
@@ -437,8 +427,12 @@ Cube.prototype._init = function _init () {
     self.mouse.y = -(e.clientY / window.innerHeight) * 2 + 1
 
     if (!self.mouse.hasMoved && self.click) {
-      var face = self._performRaycast()
-      if (face !== undefined) self.algorithm(face)
+      var rc = self._raycast()
+      var face = rc.face
+      if (face !== undefined) {
+        self.algorithm(face)
+        self.onCubieClick(rc.face, rc.object)
+      }
     }
 
     clearTimeout(self.mouse.timeout)
