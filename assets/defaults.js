@@ -22,7 +22,7 @@ var prod_defaults = {
     axisX: 0xAA0000,
     axisY: 0x00AA00,
     axisZ: 0x0000AA,
-    label: 0x88004D40,
+    label: 0xCFD8DC,
     background: 0xFFFFFF,
     cube: 0x000000,
     emptySticker: 0xCCCCCC,
