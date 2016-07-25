@@ -8,7 +8,13 @@
     <style>
     body {
       margin: 0;
-      background-image: url("img/bg-min.png");
+      background:
+      radial-gradient(black 15%, transparent 16%) 0 0,
+      radial-gradient(black 15%, transparent 16%) 8px 8px,
+      radial-gradient(rgba(255,255,255,.1) 15%, transparent 20%) 0 1px,
+      radial-gradient(rgba(255,255,255,.1) 15%, transparent 20%) 8px 9px;
+      background-color:#404040;
+      background-size:16px 16px;
     }
     canvas { width: 100%; height: 100%; position: absolute; z-index: 0; }
     @media only screen and (max-width: 500px) {
