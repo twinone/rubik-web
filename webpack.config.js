@@ -13,7 +13,7 @@ var config = {
     module: {
         loaders: [
             { test: /assets\/\.css$/, loader: "style!css" },
-            { test: /assets\/\main.js$/, loader: 'expose?cube' }
+            { test: /assets\/\main.js$/, loader: 'expose-loader?cube' }
         ]
     },
     plugins: [

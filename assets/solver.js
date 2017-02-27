@@ -286,7 +286,7 @@ function whichIs(p, p2, face) {
 }
 
 
-var CubejsWorker = require("worker!./solver_cubejs_worker");
+var CubejsWorker = require("worker-loader!./solver_cubejs_worker");
 function createCubejsSolver(cb) {
   var worker = new CubejsWorker();
   worker.addEventListener("message", function (e) {
